@@ -2,12 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import swaggerUi from 'swagger-ui-express';
+import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set('json spaces', 2);
 
 const dbPath = path.join(__dirname, '..', 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
@@ -48,20 +50,28 @@ app.get('/api/accounts', (req, res) => {
 });
 
 app.post('/api/accounts', (req, res) => {
-  /* #swagger.tags = ['Accounts']
-     #swagger.description = 'Crear una cuenta'
-     #swagger.parameters['newAccount'] = {
-        in: 'body',
-        description: 'Nueva cuenta',
-        schema: {
-            $name: 'Cuenta Principal',
-            $currency: 'USD',
-            $balance: 1000
-        }
-     }
-  */
-  // Mock insertion logic
-  res.json({ id: Date.now().toString(), ...req.body });
+  const AccountSchema = z.object({
+    name: z.string().min(1, "El nombre es obligatorio"),
+    currency: z.string().min(1),
+    balance: z.number()
+  });
+
+  try {
+    const data = AccountSchema.parse(req.body);
+    const id = Date.now().toString();
+    const userId = "u1";
+    db.run(
+      `INSERT INTO Accounts (id, userId, name, currency, balance) VALUES (?, ?, ?, ?, ?)`,
+      [id, userId, data.name, data.currency, data.balance],
+      function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ id, userId, ...data });
+      }
+    );
+  } catch (err: any) {
+    if (err.errors) return res.status(400).json({ error: "Datos inválidos", details: err.errors });
+    return res.status(400).json({ error: err.message });
+  }
 });
 
 app.get('/api/transactions', (req, res) => {
@@ -82,7 +92,8 @@ app.post('/api/transactions', (req, res) => {
     category: z.string().min(1, "La categoría es obligatoria."),
     description: z.string().min(1, "La descripción es obligatoria."),
     currency: z.enum(['USD', 'EUR', 'ARS', 'PEN'], { errorMap: () => ({ message: "Moneda no soportada. Use USD, EUR, ARS o PEN." }) }),
-    accountId: z.string().min(1, "accountId es obligatorio")
+    accountId: z.string().min(1, "accountId es obligatorio"),
+    targetAccountId: z.string().optional()
   });
 
   try {
@@ -90,20 +101,56 @@ app.post('/api/transactions', (req, res) => {
     const id = Date.now().toString();
     const ts = new Date().toISOString().split('T')[0];
     
-    db.run(
-      `INSERT INTO Transactions (id, accountId, amount, type, category, timestamp, description, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, data.accountId, data.amount, data.type, data.category, ts, data.description, data.currency],
-      function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id, ...data, timestamp: ts });
-      }
-    );
+    db.serialize(() => {
+      db.run(
+        `INSERT INTO Transactions (id, accountId, amount, type, category, timestamp, description, targetAccountId, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, data.accountId, data.amount, data.type, data.category, ts, data.description, data.targetAccountId || null, data.currency],
+        function(err) {
+          if (err) return res.status(500).json({ error: err.message });
+          
+          if (data.type === 'EXPENSE') {
+             db.run(`UPDATE Accounts SET balance = balance - ? WHERE id = ?`, [data.amount, data.accountId]);
+          } else if (data.type === 'INCOME') {
+             db.run(`UPDATE Accounts SET balance = balance + ? WHERE id = ?`, [data.amount, data.accountId]);
+          } else if (data.type === 'TRANSFER' && data.targetAccountId) {
+             db.run(`UPDATE Accounts SET balance = balance - ? WHERE id = ?`, [data.amount, data.accountId]);
+             db.run(`UPDATE Accounts SET balance = balance + ? WHERE id = ?`, [data.amount, data.targetAccountId]);
+          }
+          
+          res.json({ id, ...data, timestamp: ts });
+        }
+      );
+    });
   } catch (err: any) {
     if (err.errors) {
        return res.status(400).json({ error: "Datos inválidos", details: err.errors });
     }
     return res.status(400).json({ error: err.message });
   }
+});
+
+app.get('/api/exchange-rates', (req, res) => {
+  /* #swagger.tags = ['Rates']
+     #swagger.description = 'Obtener cotizaciones en vivo' */
+  const base = (req.query.base as string) || 'USD';
+  
+  const mockRates: Record<string, number> = {
+    USD: 1,
+    EUR: 0.92,
+    ARS: 1050,
+    PEN: 3.75
+  };
+
+  const baseRate = mockRates[base] || 1;
+  const convertedRates: Record<string, number> = {};
+  for (const [currency, rate] of Object.entries(mockRates)) {
+    if (currency !== base) {
+       // Cuánto cuesta 1 unidad de 'currency' en 'base'
+       convertedRates[currency] = baseRate / rate;
+    }
+  }
+
+  res.json({ base, rates: convertedRates, timestamp: new Date().toISOString() });
 });
 
 app.get('/api/config', (req, res) => {

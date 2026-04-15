@@ -3,3 +3,7 @@ packages:
   - 'backend'
   - 'frontend'
   - 'analytics-engine'
+allowBuilds:
+  '@scarf/scarf': true
+  esbuild: true
+  sqlite3: true
