@@ -1,0 +1,12 @@
+{
+  "name": "smart-expense-tracker-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test"
+  }
+}
