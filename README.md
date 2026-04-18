@@ -97,6 +97,7 @@ Edita `.env` y completa los valores:
 EXCHANGE_RATE_API_KEY=tu_api_key_aqui   # https://exchangerate-api.com (free)
 BACKEND_PORT=3001
 DEFAULT_BASE_CURRENCY=USD
+VITE_DEFAULT_CURRENCY=USD          # Debe coincidir con DEFAULT_BASE_CURRENCY
 ```
 
 ### 3. Levantar los servicios (3 terminales)
