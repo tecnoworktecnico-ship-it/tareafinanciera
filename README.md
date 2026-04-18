@@ -13,6 +13,8 @@
 
 ## 🏗️ Arquitectura
 
+Para una visión detallada de los principios técnicos, modelos de datos y flujo del sistema, consulta el [Documento de Diseño](DESIGN.md).
+
 ```
 tareafinanciera/
 ├── shared/              # Tipos TypeScript compartidos (Currency, Transaction, etc.)
