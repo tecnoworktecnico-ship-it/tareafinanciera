@@ -55,7 +55,15 @@ Para mostrar gráficos coherentes:
 
 ---
 
-## 6. Stack Tecnológico
+## 6. Filosofía Multi-Agente
+El sistema ha sido concebido y desarrollado bajo un paradigma de **Multi-Agentes**. Esto aplica tanto a la arquitectura del software (servicios autónomos) como al proceso de creación asistido por IA.
+
+Para una exploración profunda de cómo interactúan estos agentes, consulta el documento:
+👉 **[Arquitectura y Desarrollo Multi-Agente](MULTI_AGENT_SYSTEM.md)**
+
+---
+
+## 7. Stack Tecnológico
 
 | Capa | Tecnologías |
 | :--- | :--- |
