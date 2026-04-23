@@ -8,6 +8,8 @@ import Settings from './pages/Settings';
 import Accounts from './pages/Accounts';
 import Analytics from './pages/Analytics';
 
+import Budgets from './pages/Budgets';
+
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
 
@@ -16,6 +18,7 @@ function App() {
       case 'dashboard': return <Dashboard />;
       case 'transactions': return <Transactions />;
       case 'accounts': return <Accounts />;
+      case 'budgets': return <Budgets />;
       case 'analytics': return <Analytics />;
       case 'settings': return <Settings />;
       default: return <Dashboard />;

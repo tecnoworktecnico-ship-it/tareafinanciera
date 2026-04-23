@@ -16,6 +16,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        manrope: ['Manrope', 'sans-serif'],
       },
       animation: {
         blob: "blob 7s infinite",

@@ -1,31 +1,40 @@
 import { config } from 'dotenv';
 import path from 'path';
+import sqlite3 from 'sqlite3';
 config({ path: path.resolve(__dirname, '../../.env') });
 
 import { Currency, TransactionType } from '@finan/shared';
-import { convertCurrency } from './exchangeRate';
+// import { convertCurrency } from './exchangeRate'; // Ignorado para el Pro Auditor para no saturar API
 import { classifyExpense } from './classifier';
 
-// Config
-const apiKey = process.env.EXCHANGE_RATE_API_KEY || '';
-const baseCurrency = process.env.DEFAULT_BASE_CURRENCY || 'USD';
+// Database
+const dbPath = path.resolve(__dirname, '../../backend/database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
-console.log(`[Analytics] Started. Base Currency: ${baseCurrency}`);
+console.log(`[Pro Auditor Agent] Initialized. Monitoring: ${dbPath}`);
 
-// Simulación de escucha de nuevas transacciones en background
-setInterval(async () => {
+const runAudit = () => {
+  db.all('SELECT * FROM Transactions ORDER BY timestamp DESC LIMIT 1', [], (err, rows: any[]) => {
+    if (err) return console.error(err);
+    if (rows.length === 0) return;
+
+    const lastTx = rows[0];
+    const category = classifyExpense(lastTx.description);
     
-    const mockExpense = {
-        amount: 5000,
-        currency: 'ARS',
-        description: 'Netflix Mensual'
-    };
+    console.log(`\n--- 🛡️ PRO INTELLIGENCE AUDIT ---`);
+    console.log(`> Registro analizado: ${lastTx.description} [${lastTx.amount} ${lastTx.currency}]`);
+    console.log(`> Categoría Detectada: ${category}`);
     
-    const category = classifyExpense(mockExpense.description);
-    const convertedAmount = await convertCurrency(mockExpense.amount, mockExpense.currency, baseCurrency, apiKey);
-    
-    console.log(`> Transacción detectada: ${mockExpense.amount} ${mockExpense.currency} (${mockExpense.description})`);
-    console.log(`> Categoría Inferida: [${category}]`);
-    console.log(`> Conversión normalizada a Base (${baseCurrency}): ${convertedAmount.toFixed(2)} ${baseCurrency}\n`);
-    
-}, 10000); // Check events every 10 secs
+    // Simulación de auditoría de riesgo
+    if (lastTx.amount > 1000) {
+       console.log(`> ⚠️ ALERTA PRO: Transacción de alto valor detectada. Verificando contra presupuestos...`);
+    } else {
+       console.log(`> ✅ Estado: Normal. Flujo de capital estable.`);
+    }
+    console.log(`---------------------------------\n`);
+  });
+};
+
+// Check every 15 seconds
+setInterval(runAudit, 15000);
+runAudit();

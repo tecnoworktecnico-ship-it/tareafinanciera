@@ -8,7 +8,8 @@ const Settings = () => {
   const { 
     t, 
     language, setLanguage, 
-    baseCurrency, setBaseCurrency, 
+    baseCurrency, 
+    displayCurrency, setDisplayCurrency,
     theme, setTheme, 
     soundEnabled, setSoundEnabled,
     playUiSound
@@ -72,15 +73,18 @@ const Settings = () => {
           </select>
         </div>
 
-        {/* Base Currency */}
+        {/* Display Currency */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
              <Coins className="text-gray-400" />
-             <span className="font-medium">{t('baseCurrency')}</span>
+             <div className="flex flex-col">
+                <span className="font-medium">Divisa de Visualización</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Base Contable: ARS</span>
+             </div>
           </div>
           <select 
-             value={baseCurrency} 
-             onChange={e => { setBaseCurrency(e.target.value as Currency); handleAction(); }}
+             value={displayCurrency} 
+             onChange={e => { setDisplayCurrency(e.target.value as Currency); handleAction(); }}
              className="bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 text-sm rounded-lg px-4 py-2 focus:ring-primary dark:text-white font-medium"
           >
              {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}

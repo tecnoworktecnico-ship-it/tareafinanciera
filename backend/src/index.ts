@@ -15,16 +15,30 @@ const dbPath = path.join(__dirname, '..', 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS Users (id TEXT PRIMARY KEY, name TEXT, baseCurrency TEXT, email TEXT)`);
-  db.run(`CREATE TABLE IF NOT EXISTS Accounts (id TEXT PRIMARY KEY, userId TEXT, name TEXT, currency TEXT, balance REAL)`);
-  db.run(`CREATE TABLE IF NOT EXISTS Transactions (id TEXT PRIMARY KEY, accountId TEXT, amount REAL, type TEXT, category TEXT, timestamp TEXT, description TEXT, targetAccountId TEXT, currency TEXT)`);
+  db.run(`CREATE TABLE IF NOT EXISTS Categories (id TEXT PRIMARY KEY, name TEXT)`);
 
   // Seed Data
+  db.get("SELECT COUNT(*) as count FROM Categories", (err, row: any) => {
+    if (row && row.count === 0) {
+      const defaultCats = ['Alimentación', 'Salario', 'Suscripciones', 'Transporte', 'Salud', 'Hogar', 'Ocio', 'Inversiones'];
+      defaultCats.forEach((cat, idx) => {
+        db.run(`INSERT INTO Categories (id, name) VALUES (?, ?)`, [idx.toString(), cat]);
+      });
+    }
+  });
+
   db.get("SELECT COUNT(*) as count FROM Transactions", (err, row: any) => {
     if (row && row.count === 0) {
-      db.run(`INSERT INTO Transactions (id, amount, type, category, timestamp, description, currency) VALUES ('1', 15.0, 'EXPENSE', 'Suscripciones', '2023-10-01', 'Netflix', 'USD')`);
-      db.run(`INSERT INTO Transactions (id, amount, type, category, timestamp, description, currency) VALUES ('2', 2500, 'INCOME', 'Salario', '2023-10-02', 'Nómina', 'EUR')`);
+      db.run(`INSERT INTO Transactions (id, amount, type, category, timestamp, description, currency) VALUES ('1', 15750.0, 'EXPENSE', 'Suscripciones', '2023-10-01', 'Netflix', 'ARS')`);
+      db.run(`INSERT INTO Transactions (id, amount, type, category, timestamp, description, currency) VALUES ('2', 2625000.0, 'INCOME', 'Salario', '2023-10-02', 'Nómina', 'ARS')`);
       db.run(`INSERT INTO Transactions (id, amount, type, category, timestamp, description, currency) VALUES ('3', 4500, 'EXPENSE', 'Alimentación', '2023-10-03', 'Supermercado', 'ARS')`);
+    }
+  });
+
+  db.get("SELECT COUNT(*) as count FROM Budgets", (err, row: any) => {
+    if (row && row.count === 0) {
+      db.run(`INSERT INTO Budgets (id, category, limitAmount, currency, month) VALUES ('b1', 'Alimentación', 525000, 'ARS', '2023-10')`);
+      db.run(`INSERT INTO Budgets (id, category, limitAmount, currency, month) VALUES ('b2', 'Suscripciones', 52500, 'ARS', '2023-10')`);
     }
   });
 });
@@ -129,34 +143,82 @@ app.post('/api/transactions', (req, res) => {
   }
 });
 
+app.get('/api/categories', (req, res) => {
+  /* #swagger.tags = ['Categories']
+     #swagger.description = 'Obtener todas las categorías' */
+  db.all('SELECT * FROM Categories', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows.map((r: any) => r.name));
+  });
+});
+
+app.post('/api/categories', (req, res) => {
+  /* #swagger.tags = ['Categories']
+     #swagger.description = 'Crear una nueva categoría' */
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
+  
+  const id = Date.now().toString();
+  db.run(`INSERT INTO Categories (id, name) VALUES (?, ?)`, [id, name], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id, name });
+  });
+});
+
 app.get('/api/exchange-rates', (req, res) => {
   /* #swagger.tags = ['Rates']
-     #swagger.description = 'Obtener cotizaciones en vivo' */
-  const base = (req.query.base as string) || 'USD';
+     #swagger.description = 'Obtener cotizaciones relativas a ARS (Pivot)' */
   
-  const mockRates: Record<string, number> = {
-    USD: 1,
-    EUR: 0.92,
-    ARS: 1050,
-    PEN: 3.75
+  // Prices in ARS (Pivot)
+  const rates: Record<string, number> = {
+    USD: 1050,
+    EUR: 1141,
+    PEN: 280,
+    ARS: 1
   };
 
-  const baseRate = mockRates[base] || 1;
-  const convertedRates: Record<string, number> = {};
-  for (const [currency, rate] of Object.entries(mockRates)) {
-    if (currency !== base) {
-       // Cuánto cuesta 1 unidad de 'currency' en 'base'
-       convertedRates[currency] = baseRate / rate;
-    }
-  }
-
-  res.json({ base, rates: convertedRates, timestamp: new Date().toISOString() });
+  res.json({ base: 'ARS', rates, timestamp: new Date().toISOString() });
 });
 
 app.get('/api/config', (req, res) => {
   /* #swagger.tags = ['Config']
      #swagger.description = 'Obtener configuración del sistema (moneda base, etc.)' */
   res.json({ baseCurrency: 'USD' });
+});
+
+app.get('/api/budgets', (req, res) => {
+  /* #swagger.tags = ['Budgets']
+     #swagger.description = 'Obtener todos los presupuestos' */
+  db.all('SELECT * FROM Budgets', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/budgets', (req, res) => {
+  /* #swagger.tags = ['Budgets']
+     #swagger.description = 'Establecer un presupuesto por categoría' */
+  const BudgetSchema = z.object({
+    category: z.string().min(1),
+    limitAmount: z.number().positive(),
+    currency: z.string().min(1),
+    month: z.string().min(1)
+  });
+
+  try {
+    const data = BudgetSchema.parse(req.body);
+    const id = Date.now().toString();
+    db.run(
+      `INSERT INTO Budgets (id, category, limitAmount, currency, month) VALUES (?, ?, ?, ?, ?)`,
+      [id, data.category, data.limitAmount, data.currency, data.month],
+      function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ id, ...data });
+      }
+    );
+  } catch (err: any) {
+    res.status(400).json({ error: "Datos inválidos", details: err.errors || err.message });
+  }
 });
 
 const PORT = process.env.PORT || 3001;

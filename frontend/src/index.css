@@ -1,24 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
+:root {
+  --primary: #0058bd;
+  --primary-container: #2771df;
+  --on-primary: #ffffff;
+  --background: #f8f9fa;
+  --surface: #f8f9fa;
+  --surface-container-low: #f3f4f5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-high: #e7e8e9;
+  --on-surface: #191c1d;
+  --outline: #727785;
+  --secondary: #006e2c;
+  --tertiary: #b51b15;
 }
+
+.dark {
+  --primary: #adc6ff;
+  --primary-container: #004494;
+  --on-primary: #002e69;
+  --background: #111318;
+  --surface: #111318;
+  --surface-container-low: #1a1c1e;
+  --surface-container-lowest: #0d0e11;
+  --surface-container-high: #2a2d31;
+  --on-surface: #e2e2e6;
+  --outline: #8e9099;
+  --secondary: #6ddd81;
+  --tertiary: #ffb4a9;
+}
+
 @layer base {
+  body {
+    @apply font-sans bg-[var(--background)] text-[var(--on-surface)] transition-colors duration-300;
+  }
+  
+  h1, h2, h3, .font-editorial {
+    font-family: 'Manrope', sans-serif;
+  }
+
   select option {
     background-color: white;
     color: black;
   }
   .dark select option {
-    background-color: #1e293b; /* slate-800 */
+    background-color: #1e293b;
     color: white;
   }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-white/10;
+  }
+  
+  .glass-premium {
+    @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-xl;
+  }
+
+  .text-hero {
+    @apply text-[3.5rem] leading-none font-extrabold tracking-tight;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .surface-card {
+    @apply bg-[var(--surface-container-lowest)] dark:bg-[var(--surface-container-low)] shadow-sm transition-all;
+  }
+
+  .no-border {
+    @apply border-none;
+  }
+
+  .gradient-cta {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+    @apply text-white;
+  }
+
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-4000 { animation-delay: 4s; }
 }

@@ -12,7 +12,7 @@ const Ticker = () => {
     let isSubscribed = true;
     const fetchRates = async () => {
       try {
-        const res = await fetch(`/api/exchange-rates?base=${baseCurrency}`);
+        const res = await fetch(`/api/exchange-rates`);
         const data = await res.json();
         if (isSubscribed) {
           setLastRates(rates); // Keep track to show red/green indicators
@@ -29,28 +29,27 @@ const Ticker = () => {
       isSubscribed = false;
       clearInterval(interval);
     };
-  }, [baseCurrency]);
+  }, []); // Remove baseCurrency dependency
 
   return (
     <div className="bg-slate-900 text-white dark:bg-black py-2 px-4 shadow-inner text-sm flex items-center overflow-hidden whitespace-nowrap z-10 w-full relative">
       <div className="font-bold tracking-widest text-[#FBBC05] mr-4 shrink-0 uppercase flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div> 
-        {t('rates')} (x1 {baseCurrency}):
+        COTIZACIONES (1 UNIDAD = X ARS):
       </div>
       <div className="flex animate-marquee min-w-full">
         {Object.entries(rates).map(([curr, rate]) => {
-          if (curr === baseCurrency) return null;
           const prev = lastRates[curr] || rate;
           const isUp = rate > prev;
           const isDown = rate < prev;
+          const isBase = curr === 'ARS';
 
           return (
-            <div key={curr} className="inline-flex items-center mx-4 gap-1">
-               <span className="font-semibold text-gray-300">{curr}</span>
-               <span className="font-mono">{rate.toFixed(4)}</span>
-               {isUp && <TrendingUp size={14} className="text-income animate-pulse" />}
-               {isDown && <TrendingDown size={14} className="text-expense" />}
-               {!isUp && !isDown && <span className="w-3.5 h-3.5 inline-block opacity-0">-</span>}
+            <div key={curr} className={`inline-flex items-center mx-4 gap-1 ${isBase ? 'opacity-50' : ''}`}>
+               <span className="font-black text-white">{curr}</span>
+               <span className="font-mono font-bold text-primary">{rate.toLocaleString('es-AR')}</span>
+               {!isBase && isUp && <TrendingUp size={14} className="text-income animate-pulse" />}
+               {!isBase && isDown && <TrendingDown size={14} className="text-expense" />}
             </div>
           );
         })}
