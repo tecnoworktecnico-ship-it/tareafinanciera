@@ -1,5 +1,5 @@
-import React from 'react';
 import { X, HelpCircle } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children }) => {
+  const { t } = useAppContext();
   if (!isOpen) return null;
 
   return (
@@ -31,7 +32,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children 
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">{title}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Guía de Ayuda</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('helpGuide')}</p>
             </div>
           </div>
         </div>
@@ -45,7 +46,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, title, children 
             onClick={onClose}
             className="px-6 py-2 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-all active:scale-95"
           >
-            Entendido
+            {t('understood')}
           </button>
         </div>
       </div>

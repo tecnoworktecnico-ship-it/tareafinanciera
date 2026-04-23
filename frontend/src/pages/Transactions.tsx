@@ -181,7 +181,7 @@ const Transactions = () => {
                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                <input 
                   type="text" 
-                  placeholder="Busca por descripción o categoría..." 
+                  placeholder={t('searchPlaceholder')} 
                   value={searchTerm}
                   onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   className="w-full pl-12 pr-4 py-4 rounded-3xl surface-card border-none outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary transition font-manrope font-medium"
@@ -192,7 +192,7 @@ const Transactions = () => {
               onChange={e => { setFilterType(e.target.value); setCurrentPage(1); }}
               className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none appearance-none"
             >
-               <option value="ALL">Todos los tipos</option>
+               <option value="ALL">{t('allTypes')}</option>
                <option value="INCOME">Ingresos</option>
                <option value="EXPENSE">Gastos</option>
                <option value="TRANSFER">Transferencias</option>
@@ -205,7 +205,7 @@ const Transactions = () => {
               onChange={e => { setFilterAccount(e.target.value); setCurrentPage(1); }}
               className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none appearance-none"
             >
-               <option value="ALL">Todas las cuentas</option>
+               <option value="ALL">{t('allAccounts')}</option>
                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
             </select>
             <div className="flex-1 flex gap-2">
@@ -217,7 +217,7 @@ const Transactions = () => {
 
       {showForm && (
         <div className="glass-premium p-8 rounded-[2rem] space-y-6 animate-in slide-in-from-top-4 fade-in duration-500">
-           <h3 className="text-xl font-bold font-manrope">{editingTx ? 'Editar' : 'Nueva'} Transacción Multidivisa</h3>
+           <h3 className="text-xl font-bold font-manrope">{editingTx ? t('editTransaction') : t('newTransaction')}</h3>
            {formError && <div className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-xl">{formError}</div>}
            <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-2">
@@ -226,25 +226,25 @@ const Transactions = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-xs font-black uppercase text-gray-400 mb-2">Monto</label>
+                   <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('amount')}</label>
                    <input type="number" step="0.01" required value={newTx.amount} onChange={e => setNewTx({...newTx, amount: e.target.value})} className="w-full p-4 bg-gray-50 dark:bg-slate-900 rounded-2xl border-none ring-1 ring-gray-100 outline-none focus:ring-2 focus:ring-primary transition" />
                 </div>
                 <div>
-                   <label className="block text-xs font-black uppercase text-gray-400 mb-2">Divisa</label>
+                   <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('currency')}</label>
                    <select value={newTx.currency} onChange={e => setNewTx({...newTx, currency: e.target.value as Currency})} className="w-full bg-gray-50 dark:bg-slate-900 p-4 rounded-2xl border-none ring-1 ring-gray-100 outline-none focus:ring-2 focus:ring-primary transition appearance-none">
                       {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
                    </select>
                 </div>
               </div>
                <div>
-                  <label className="block text-xs font-black uppercase text-gray-400 mb-2">Categoría</label>
+                  <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('categoryLabel')}</label>
                   <select 
                      value={newTx.category} 
                      onChange={e => handleCategoryChange(e.target.value)} 
                      className="w-full bg-gray-50 dark:bg-slate-900 p-4 rounded-2xl border-none ring-1 ring-gray-100 outline-none focus:ring-2 focus:ring-primary transition appearance-none font-medium"
                   >
                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                     <option value="NEW_CAT" className="font-bold text-primary">+ Nueva Categoría...</option>
+                     <option value="NEW_CAT" className="font-bold text-primary">{t('newCategory')}</option>
                   </select>
                </div>
               <div>
@@ -263,7 +263,7 @@ const Transactions = () => {
                </div>
                <div className="flex justify-end gap-3">
                   <button type="button" onClick={() => { setShowForm(false); setEditingTx(null); }} className="px-8 py-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-2xl font-bold hover:bg-gray-200 transition">
-                     Cancelar
+                     {t('cancelBtn')}
                   </button>
                   <button type="submit" className="gradient-cta px-12 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition">
                      {editingTx ? 'Actualizar' : 'Confirmar'} {t('addTransaction')}
@@ -368,6 +368,20 @@ const Transactions = () => {
            </div>
         </div>
       )}
+
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('transactions')}>
+        <div className="space-y-4 text-gray-600 dark:text-gray-300">
+           <p>{t('helpTxIntro')}</p>
+           <section>
+              <h4 className="font-bold text-gray-800 dark:text-white">{t('helpTxFilterTitle')}</h4>
+              <p className="text-sm">{t('helpTxFilterBody')}</p>
+           </section>
+           <section>
+              <h4 className="font-bold text-gray-800 dark:text-white">{t('helpTxDetailsTitle')}</h4>
+              <p className="text-sm">{t('helpTxDetailsBody')}</p>
+           </section>
+        </div>
+      </HelpModal>
     </div>
   );
 };

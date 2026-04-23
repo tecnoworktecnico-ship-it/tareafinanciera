@@ -141,7 +141,7 @@ const Accounts = () => {
                onClick={() => { playUiSound('click'); setShowTransferForm(true); }}
                className="bg-purple-500 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-purple-600 transition flex items-center gap-2"
             >
-              <Send size={18} /> Transferir
+              <Send size={18} /> {t('transferFunds')}
             </button>
             <button 
                onClick={() => { playUiSound('click'); setShowAddForm(true); }}
@@ -179,27 +179,27 @@ const Accounts = () => {
         <div className="absolute inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm animate-in fade-in">
            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 animate-in slide-in-from-top-10">
                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold dark:text-white">{editingAccount ? 'Editar' : 'Nueva'} Cuenta</h3>
+                  <h3 className="text-xl font-bold dark:text-white">{editingAccount ? t('editAccount') : t('newAccount')}</h3>
                   <button onClick={() => { setShowAddForm(false); setEditingAccount(null); }} className="text-gray-400 hover:text-red-500"><X/></button>
                </div>
               {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
               <form onSubmit={handleAddAccount} className="space-y-4">
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Nombre</label>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('accountName')}</label>
                     <input type="text" required value={newAcc.name} onChange={e=>setNewAcc({...newAcc, name: e.target.value})} className="w-full bg-transparent border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white"/>
                  </div>
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Moneda</label>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('accountCurrency')}</label>
                     <select value={newAcc.currency} onChange={e=>setNewAcc({...newAcc, currency: e.target.value})} className="w-full bg-transparent border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white">
                       {Object.values(Currency).map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                  </div>
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Balance Inicial</label>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('initialBalance')}</label>
                     <input type="number" step="0.01" value={newAcc.balance} onChange={e=>setNewAcc({...newAcc, balance: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white"/>
                  </div>
-                  <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg shadow hover:bg-blue-600 transition">
-                    {editingAccount ? 'Actualizar' : 'Agregar'} Cuenta
+                   <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg shadow hover:bg-blue-600 transition">
+                    {editingAccount ? t('saveBtn') : t('add')}
                   </button>
               </form>
            </div>
@@ -211,30 +211,30 @@ const Accounts = () => {
         <div className="absolute inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm animate-in fade-in">
            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 animate-in slide-in-from-top-10">
               <div className="flex justify-between items-center mb-6">
-                 <h3 className="text-xl font-bold dark:text-white">Transferir Fondos</h3>
+                 <h3 className="text-xl font-bold dark:text-white">{t('transferFunds')}</h3>
                  <button onClick={() => setShowTransferForm(false)} className="text-gray-400 hover:text-red-500"><X/></button>
               </div>
               {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
               <form onSubmit={handleTransfer} className="space-y-4">
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Desde Cuenta</label>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('fromAccount')}</label>
                     <select required value={transfer.accountId} onChange={e=>setTransfer({...transfer, accountId: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white">
-                      <option value="">Seleccione...</option>
+                      <option value="">{t('selectOption')}</option>
                       {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
                     </select>
                  </div>
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Hacia Cuenta</label>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('toAccount')}</label>
                     <select required value={transfer.targetAccountId} onChange={e=>setTransfer({...transfer, targetAccountId: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white">
-                      <option value="">Seleccione...</option>
+                      <option value="">{t('selectOption')}</option>
                       {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
                     </select>
                  </div>
                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Monto a Enviar</label>
-                    <input type="number" step="0.01" required value={transfer.amount} onChange={e=>setTransfer({...transfer, amount: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white"/>
+                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('amountToSend')}</label>
+                     <input type="number" step="0.01" required value={transfer.amount} onChange={e=>setTransfer({...transfer, amount: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white"/>
                  </div>
-                 <button type="submit" className="w-full bg-purple-500 text-white font-semibold py-2 rounded-lg shadow hover:bg-purple-600 transition">Confirmar Transferencia</button>
+                 <button type="submit" className="w-full bg-purple-500 text-white font-semibold py-2 rounded-lg shadow hover:bg-purple-600 transition">{t('confirmTransfer')}</button>
               </form>
            </div>
         </div>

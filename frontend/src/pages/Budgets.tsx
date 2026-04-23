@@ -131,7 +131,7 @@ const Budgets = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <header className="flex flex-col md:flex-row justify-between items-center gap-4 glass p-6 rounded-3xl shadow-xl">
         <h2 className="text-3xl font-manrope font-extrabold text-[#191c1d] dark:text-white flex items-center gap-3">
-           <Target className="text-primary w-8 h-8" /> {t('budgets') || 'Presupuestos'}
+           <Target className="text-primary w-8 h-8" /> {t('budgets')}
         </h2>
         <div className="flex items-center gap-4">
            <input 
@@ -148,7 +148,7 @@ const Budgets = () => {
                 onClick={() => { playUiSound('click'); setShowAdd(true); }}
                 className="gradient-cta flex items-center gap-2 px-6 py-3 rounded-2xl font-bold font-manrope shadow-lg hover:scale-105 transition"
               >
-                 <Plus size={20} /> Crear Límite
+                 <Plus size={20} /> {t('createLimit')}
               </button>
            </div>
         </div>
@@ -180,7 +180,7 @@ const Budgets = () => {
 
                <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                     <span>Progreso en {displayCurrency}</span>
+                     <span>{t('progressIn')} {displayCurrency}</span>
                      <span>{budget.percentage.toFixed(0)}%</span>
                   </div>
                   <div className="w-full h-4 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -192,7 +192,7 @@ const Budgets = () => {
                </div>
                
                {isOver && (
-                 <p className="text-xs text-red-500 font-bold animate-pulse">⚠️ ¡Gasto excedido en {baseCurrency}!</p>
+                 <p className="text-xs text-red-500 font-bold animate-pulse">⚠️ {t('spendingExceeded')}!</p>
                )}
             </div>
           );
@@ -202,7 +202,7 @@ const Budgets = () => {
 
       {handledBudgets.length > 0 && (
         <section className="glass-premium p-8 rounded-[2rem] space-y-8">
-           <h3 className="text-2xl font-manrope font-black">Distribución de Gastos</h3>
+           <h3 className="text-2xl font-manrope font-black">{t('spendingDistribution')}</h3>
            <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                  <PieChart>
@@ -233,21 +233,21 @@ const Budgets = () => {
       {showAdd && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div className="glass-premium p-8 rounded-[2.5rem] w-full max-w-md animate-in zoom-in duration-300">
-               <h3 className="text-2xl font-manrope font-extrabold mb-6">Nuevo Presupuesto</h3>
+               <h3 className="text-2xl font-manrope font-extrabold mb-6">{t('newBudget')}</h3>
                <div className="space-y-4">
                    <div>
-                      <label className="block text-xs font-black uppercase text-gray-400 mb-2">Categoría</label>
+                      <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('categoryLabel')}</label>
                       <select 
                          value={newBudget.category}
                          onChange={e => handleCategoryChange(e.target.value)}
                          className="w-full bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary outline-none transition appearance-none font-medium"
                       >
                          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                         <option value="NEW_CAT" className="font-bold text-primary">+ Nueva Categoría...</option>
+                         <option value="NEW_CAT" className="font-bold text-primary">{t('newCategory')}</option>
                       </select>
                    </div>
                   <div>
-                     <label className="block text-xs font-black uppercase text-gray-400 mb-2">Monto Límite ({baseCurrency})</label>
+                     <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('limitAmount')} ({baseCurrency})</label>
                      <input 
                         type="number" 
                         value={newBudget.limitAmount}
@@ -255,18 +255,23 @@ const Budgets = () => {
                         className="w-full bg-gray-50 dark:bg-slate-800 p-4 rounded-2xl border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary outline-none transition"
                      />
                   </div>
-                  <p className="text-[10px] text-gray-500 italic">* El presupuesto se guardará en {baseCurrency} pero se mostrará convertido si cambias de divisa global.</p>
+                  <p className="text-[10px] text-gray-500 italic">{t('budgetSaveNote')}</p>
                   <div className="flex gap-4 pt-4">
-                     <button onClick={() => setShowAdd(false)} className="flex-1 p-4 rounded-2xl font-bold bg-gray-100 dark:bg-slate-700 transition">Cancelar</button>
-                     <button onClick={handleCreate} className="flex-1 p-4 rounded-2xl font-bold gradient-cta shadow-lg shadow-primary/30 transition">Guardar</button>
+                     <button onClick={() => setShowAdd(false)} className="flex-1 p-4 rounded-2xl font-bold bg-gray-100 dark:bg-slate-700 transition">{t('cancelBtn')}</button>
+                     <button onClick={handleCreate} className="flex-1 p-4 rounded-2xl font-bold gradient-cta shadow-lg shadow-primary/30 transition">{t('saveBtn')}</button>
                   </div>
                </div>
             </div>
          </div>
       )}
 
-      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Control Multidivisa">
-         <p className="text-sm">Tus límites de gasto son dinámicos. Si registras gastos en Euros pero tu presupuesto está en Dólares, el sistema hace el cruce de cotización al vuelo.</p>
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('budgets')}>
+        <div className="space-y-4 text-gray-600 dark:text-gray-300">
+          <p>{t('helpBudgetsIntro')}</p>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpBudgetsCreateTitle')}</h4><p className="text-sm">{t('helpBudgetsCreateBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpBudgetsProgressTitle')}</h4><p className="text-sm">{t('helpBudgetsProgressBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpBudgetsMonthTitle')}</h4><p className="text-sm">{t('helpBudgetsMonthBody')}</p></section>
+        </div>
       </HelpModal>
     </div>
   );

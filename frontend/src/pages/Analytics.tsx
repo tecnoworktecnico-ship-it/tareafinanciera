@@ -83,8 +83,8 @@ const Analytics = () => {
         <div className="glass-premium p-8 rounded-[2rem] lg:col-span-2">
            <div className="flex justify-between items-center mb-8">
               <div>
-                 <h3 className="text-xl font-bold font-manrope">Flujo de Capital (30d)</h3>
-                 <p className="text-sm text-gray-500">Normalizado a {baseCurrency}</p>
+                 <h3 className="text-xl font-bold font-manrope">{t('capitalFlow')}</h3>
+                 <p className="text-sm text-gray-500">{t('normalizedTo')} {baseCurrency}</p>
               </div>
               <ActivityStats data={stats?.areaData} formatMoney={formatMoney} />
            </div>
@@ -120,7 +120,7 @@ const Analytics = () => {
         {/* Categories Distribution */}
         <div className="glass-premium p-8 rounded-[2rem]">
            <h3 className="text-xl font-bold font-manrope mb-6 flex items-center gap-2">
-              <PieIcon size={20} className="text-primary"/> Gastos por Categoría
+              <PieIcon size={20} className="text-primary"/> {t('spendingByCategory')}
            </h3>
            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -145,8 +145,8 @@ const Analytics = () => {
 
         {/* Pro Efficiency Metric */}
         <div className="glass-premium p-8 rounded-[2rem] flex flex-col justify-center">
-           <h3 className="text-xl font-bold font-manrope mb-2">Eficiencia en {baseCurrency}</h3>
-           <p className="text-sm text-gray-500 mb-8">Análisis dinámico del flujo de caja.</p>
+           <h3 className="text-xl font-bold font-manrope mb-2">{t('efficiencyIn')} {baseCurrency}</h3>
+           <p className="text-sm text-gray-500 mb-8">{t('dynamicAnalysis')}</p>
            
            <div className="flex items-center gap-8">
               <div className="relative w-32 h-32">
@@ -157,27 +157,34 @@ const Analytics = () => {
                  <div className="absolute inset-0 flex items-center justify-center font-manrope text-2xl font-black">Pro</div>
               </div>
               <div className="space-y-2">
-                 <div className="flex items-center gap-2 text-primary font-bold"><TrendingUp size={18}/> Dinámico</div>
-                 <p className="text-xs text-gray-500 italic">"Las cotizaciones se actualizan automáticamente cada 60 segundos."</p>
+                 <div className="flex items-center gap-2 text-primary font-bold"><TrendingUp size={18}/> {t('dynamicLabel')}</div>
+                 <p className="text-xs text-gray-500 italic">"{t('ratesUpdateNote')}"</p>
               </div>
            </div>
         </div>
 
       </div>
 
-      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Analítica Multidivisa">
-        <p className="text-sm">Todos los datos históricos se convierten automáticamente a tu moneda base preferida: {baseCurrency}.</p>
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('analytics')}>
+        <div className="space-y-4 text-gray-600 dark:text-gray-300">
+          <p>{t('helpAnalyticsIntro')}</p>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpAnalyticsDailyTitle')}</h4><p className="text-sm">{t('helpAnalyticsDailyBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpAnalyticsMonthlyTitle')}</h4><p className="text-sm">{t('helpAnalyticsMonthlyBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpAnalyticsCurrencyTitle')}</h4><p className="text-sm">{t('helpAnalyticsCurrencyBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpAnalyticsCategoryTitle')}</h4><p className="text-sm">{t('helpAnalyticsCategoryBody')}</p></section>
+        </div>
       </HelpModal>
     </div>
   );
 };
 
 const ActivityStats = ({ data, formatMoney }: { data: any, formatMoney: any }) => {
+   const { t } = useAppContext();
    const totalInc = data?.reduce((acc: any, curr: any) => acc + curr.income, 0) || 0;
    return (
       <div className="flex gap-4">
          <div className="text-right">
-            <p className="text-[10px] text-gray-400 font-black uppercase">Volumen Total</p>
+            <p className="text-[10px] text-gray-400 font-black uppercase">{t('totalVolume')}</p>
             <p className="font-manrope font-bold text-green-600">+{formatMoney(totalInc)}</p>
          </div>
       </div>

@@ -16,3 +16,6 @@ Este documento registra los errores encontrados durante la transición a la vers
 | 012 | Backend | ✅ Resuelto | `dotenv` no cargado: La API Key no llegaba a `process.env`. Se integró `dotenv` al inicio de `index.ts`. |
 | 013 | Backend Cache | ✅ Resuelto | Valores fallback persistentes por 1 hora. Se implementó un "Pre-warm" inicial al arrancar el servidor. |
 | 014 | Browser Security | ✅ Resuelto | Error `chrome-error://chromewebdata/` por colisión de procesos. Se mataron procesos huérfanos y se reinició con `pnpm dev`. |
+| 015 | Analytics | ✅ Resuelto | `ReferenceError: t is not defined` en `ActivityStats`. Se añadió `useAppContext` al sub-componente. |
+| 016 | Transactions | ✅ Resuelto | El botón de ayuda no hacía nada. Se añadió el componente `<HelpModal>` al JSX que faltaba. |
+

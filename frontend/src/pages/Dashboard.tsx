@@ -143,8 +143,8 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
         <div className="space-y-6">
            <div className="glass-premium p-8 rounded-[2rem] space-y-6 relative overflow-hidden">
               <div className="relative z-10">
-                 <h3 className="font-bold flex items-center gap-2 mb-4"><TrendingUp size={18} className="text-primary"/> Salud Mensual</h3>
-                 <p className="text-xs text-gray-500 mb-6 font-manrope">Visualización activa en {displayCurrency}. Respaldo contable en ARS.</p>
+                  <h3 className="font-bold flex items-center gap-2 mb-4"><TrendingUp size={18} className="text-primary"/> {t('monthlyHealth')}</h3>
+                  <p className="text-xs text-gray-500 mb-6 font-manrope">{t('activeVisualization')} {displayCurrency}. {t('accountingBackup')}</p>
                  <div className="w-full h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full w-[100%]"></div>
                  </div>
@@ -162,8 +162,13 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
 
       </div>
 
-      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Dashboard Pro">
-        <p className="text-sm">El sistema convierte automáticamente todas tus transacciones a {baseCurrency} usando cotizaciones en tiempo real.</p>
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('dashboard')}>
+        <div className="space-y-4 text-gray-600 dark:text-gray-300">
+          <p>{t('helpDashboardIntro')}</p>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpDashboardBalanceTitle')}</h4><p className="text-sm">{t('helpDashboardBalanceBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpDashboardFeedTitle')}</h4><p className="text-sm">{t('helpDashboardFeedBody')}</p></section>
+          <section><h4 className="font-bold text-gray-800 dark:text-white">{t('helpDashboardCurrencyTitle')}</h4><p className="text-sm">{t('helpDashboardCurrencyBody')}</p></section>
+        </div>
       </HelpModal>
     </div>
   );

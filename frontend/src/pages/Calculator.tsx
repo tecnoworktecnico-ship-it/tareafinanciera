@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Calculator as CalcIcon, ArrowLeftRight, Repeat, LayoutGrid, TrendingUp } from 'lucide-react';
+import { Calculator as CalcIcon, ArrowLeftRight, Repeat, LayoutGrid, TrendingUp, HelpCircle } from 'lucide-react';
 import { Currency } from '@finan/shared';
+import HelpModal from '../components/HelpModal';
 
 const Calculator = () => {
   const { t, rates, convert, visualConvert, formatMoney, displayCurrency } = useAppContext();
   const [activeTab, setActiveTab] = useState<'convert' | 'spread' | 'compare'>('convert');
+  const [showHelp, setShowHelp] = useState(false);
   
   // Tab 1: Simple Conversion State
   const [convAmount, setConvAmount] = useState('1000');
@@ -55,8 +57,12 @@ const Calculator = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <header className="flex justify-between items-center glass p-6 rounded-3xl shadow-xl">
         <h2 className="text-3xl font-manrope font-extrabold text-[#191c1d] dark:text-white flex items-center gap-3">
-           <CalcIcon className="text-primary w-8 h-8" /> Calculadora Financiera
+           <CalcIcon className="text-primary w-8 h-8" /> {t('financialCalculator')}
         </h2>
+        <button onClick={() => setShowHelp(true)} aria-label="Ayuda de calculadora"
+          className="p-3 bg-white/50 dark:bg-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-600 transition shadow-sm">
+          <HelpCircle className="text-gray-500 dark:text-gray-300" />
+        </button>
       </header>
 
       {/* Mode Tabs */}
@@ -65,19 +71,19 @@ const Calculator = () => {
           onClick={() => setActiveTab('convert')}
           className={`px-8 py-3 rounded-xl font-bold transition-all ${activeTab === 'convert' ? 'bg-white dark:bg-slate-700 shadow-md text-primary' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          Conversión simple
+          {t('simpleConversion')}
         </button>
         <button 
           onClick={() => setActiveTab('spread')}
           className={`px-8 py-3 rounded-xl font-bold transition-all ${activeTab === 'spread' ? 'bg-white dark:bg-slate-700 shadow-md text-primary' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          Compra / Venta
+          {t('buySell')}
         </button>
         <button 
           onClick={() => setActiveTab('compare')}
           className={`px-8 py-3 rounded-xl font-bold transition-all ${activeTab === 'compare' ? 'bg-white dark:bg-slate-700 shadow-md text-primary' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
         >
-          Comparar
+          {t('compare')}
         </button>
       </div>
 
@@ -85,7 +91,7 @@ const Calculator = () => {
         <div className="glass-premium p-10 rounded-[2.5rem] space-y-8">
            <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1 w-full">
-                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Tengo</label>
+                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">{t('iHave')}</label>
                  <div className="flex gap-2">
                     <input 
                        type="number" 
@@ -112,7 +118,7 @@ const Calculator = () => {
               </button>
 
               <div className="flex-1 w-full">
-                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Recibo</label>
+                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">{t('iReceive')}</label>
                  <div className="flex gap-2">
                     <input 
                        type="text" 
@@ -137,7 +143,7 @@ const Calculator = () => {
                     {formatMoney(convResult, convTo as Currency)}
                  </p>
                  <p className="text-gray-400 font-bold">
-                    {formatMoney(Number(convAmount), convFrom as Currency)} al tipo de cambio oficial
+                    {formatMoney(Number(convAmount), convFrom as Currency)} {t('atOfficialRate')}
                  </p>
               </div>
               <div className="absolute right-8 top-1/2 -translate-y-1/2">
@@ -152,12 +158,12 @@ const Calculator = () => {
       {activeTab === 'spread' && (
         <div className="glass-premium p-10 rounded-[2.5rem] space-y-8">
            <div className="text-center">
-              <p className="text-xs font-black uppercase text-gray-400 tracking-[0.3em] mb-4">Modo Compra / Venta con Spread</p>
+              <p className="text-xs font-black uppercase text-gray-400 tracking-[0.3em] mb-4">{t('spreadMode')}</p>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                 <label className="block text-xs font-black uppercase text-gray-400 tracking-widest">Monto a Operar</label>
+                 <label className="block text-xs font-black uppercase text-gray-400 mb-2">{t('amountToOperate')}</label>
                  <div className="flex gap-2">
                     <input 
                        type="number" 
@@ -223,7 +229,7 @@ const Calculator = () => {
       {activeTab === 'compare' && (
         <div className="glass-premium p-10 rounded-[2.5rem] space-y-8">
            <div className="max-w-md mx-auto">
-              <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest text-center">Monto a Comparar</label>
+              <label className="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest text-center">{t('amountToCompare')}</label>
               <div className="flex gap-2">
                  <input 
                     type="number" 
@@ -256,6 +262,23 @@ const Calculator = () => {
            </div>
         </div>
       )}
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('financialCalculator')}>
+        <div className="space-y-4 text-gray-600 dark:text-gray-300">
+          <p>{t('helpCalcIntro')}</p>
+          <section>
+            <h4 className="font-bold text-gray-800 dark:text-white">{t('helpCalcConvertTitle')}</h4>
+            <p className="text-sm">{t('helpCalcConvertBody')}</p>
+          </section>
+          <section>
+            <h4 className="font-bold text-gray-800 dark:text-white">{t('helpCalcSpreadTitle')}</h4>
+            <p className="text-sm">{t('helpCalcSpreadBody')}</p>
+          </section>
+          <section>
+            <h4 className="font-bold text-gray-800 dark:text-white">{t('helpCalcCompareTitle')}</h4>
+            <p className="text-sm">{t('helpCalcCompareBody')}</p>
+          </section>
+        </div>
+      </HelpModal>
     </div>
   );
 };

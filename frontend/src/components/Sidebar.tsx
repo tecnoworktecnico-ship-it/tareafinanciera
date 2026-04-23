@@ -14,9 +14,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setTab }) => {
     { id: 'dashboard', icon: <LayoutDashboard size={20} />, label: t('dashboard') },
     { id: 'accounts', icon: <WalletCards size={20} />, label: t('accounts') },
     { id: 'transactions', icon: <ArrowRightLeft size={20} />, label: t('transactions') },
-    { id: 'budgets', icon: <Target size={20} />, label: t('budgets') || 'Presupuestos' },
+    { id: 'budgets', icon: <Target size={20} />, label: t('budgets') },
     { id: 'analytics', icon: <PieChart size={20} />, label: t('analytics') },
-    { id: 'calculator', icon: <Calculator size={20} />, label: 'Calculadora' },
+    { id: 'calculator', icon: <Calculator size={20} />, label: t('calculatorLabel') },
     { id: 'settings', icon: <Settings size={20} />, label: t('settings') },
   ];
 

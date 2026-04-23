@@ -78,7 +78,7 @@ const Settings = () => {
           <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
              <Coins className="text-gray-400" />
              <div className="flex flex-col">
-                <span className="font-medium">Divisa de Visualización</span>
+                <span className="font-medium">{t('displayCurrencyLabel')}</span>
                 <span className="text-[10px] text-gray-400 uppercase font-bold">Base Contable: ARS</span>
              </div>
           </div>
