@@ -9,6 +9,7 @@ import Accounts from './pages/Accounts';
 import Analytics from './pages/Analytics';
 
 import Budgets from './pages/Budgets';
+import Calculator from './pages/Calculator';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -20,6 +21,7 @@ function App() {
       case 'accounts': return <Accounts />;
       case 'budgets': return <Budgets />;
       case 'analytics': return <Analytics />;
+      case 'calculator': return <Calculator />;
       case 'settings': return <Settings />;
       default: return <Dashboard />;
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, WalletCards, ArrowRightLeft, PieChart, Settings, Target } from 'lucide-react';
+import { LayoutDashboard, WalletCards, ArrowRightLeft, PieChart, Settings, Target, Calculator } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setTab }) => {
     { id: 'transactions', icon: <ArrowRightLeft size={20} />, label: t('transactions') },
     { id: 'budgets', icon: <Target size={20} />, label: t('budgets') || 'Presupuestos' },
     { id: 'analytics', icon: <PieChart size={20} />, label: t('analytics') },
+    { id: 'calculator', icon: <Calculator size={20} />, label: 'Calculadora' },
     { id: 'settings', icon: <Settings size={20} />, label: t('settings') },
   ];
 

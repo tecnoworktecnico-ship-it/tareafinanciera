@@ -1,9 +1,11 @@
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import swaggerUi from 'swagger-ui-express';
 import * as fs from 'fs';
-import * as path from 'path';
 import { z } from 'zod';
 
 const app = express();
@@ -343,6 +345,31 @@ app.post('/api/budgets', (req, res) => {
     res.status(400).json({ error: "Datos inválidos", details: err.errors || err.message });
   }
 });
+
+// Pre-warm rates cache on startup
+(async () => {
+  try {
+    const apiKey = process.env.EXCHANGE_RATE_API_KEY;
+    if (apiKey && apiKey !== 'your_free_api_key_here') {
+      const response = await fetch(`https://v6.exchangerate-api.com/v6/${apiKey}/latest/ARS`);
+      const data = await response.json();
+      if (data.result === 'success') {
+        ratesCache = {
+          rates: {
+            USD: 1 / data.conversion_rates.USD,
+            EUR: 1 / data.conversion_rates.EUR,
+            PEN: 1 / data.conversion_rates.PEN,
+            ARS: 1
+          },
+          timestamp: Date.now()
+        };
+        console.log('✅ Cotizaciones cargadas desde ExchangeRate-API al inicio');
+      }
+    }
+  } catch (e) {
+    console.error('⚠️ No se pudo pre-cargar cotizaciones:', e);
+  }
+})();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
