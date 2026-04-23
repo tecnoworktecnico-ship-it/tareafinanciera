@@ -5,8 +5,7 @@ import { ArrowUpRight, ArrowDownRight, Activity, HelpCircle, Wallet, TrendingUp,
 import HelpModal from '../components/HelpModal';
 
 const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
-  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, transactions } = useAppContext();
   
   const currencyNames: Record<string, string> = {
     ARS: 'Pesos Argentinos',
@@ -14,34 +13,7 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
     EUR: 'Euro',
     PEN: 'Sol Peruano'
   };
-  const [loading, setLoading] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
-
-  useEffect(() => {
-    let isSub = true;
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/transactions');
-        const data = await res.json();
-        if (isSub) {
-          if (transactions.length > 0 && data.length > 0 && data[0].id !== transactions[0].id) {
-             playUiSound('money');
-          }
-          setTransactions(data);
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => {
-      isSub = false;
-      clearInterval(interval);
-    };
-  }, [transactions.length, playUiSound]);
 
   const stats = useMemo(() => {
     let totalARS = 0;
@@ -69,7 +41,7 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
 
   const recent = transactions.slice(0, 5);
 
-  if (loading || loadingRates) return (
+  if (loadingRates) return (
     <div className="flex h-96 items-center justify-center">
       <Loader2 className="animate-spin text-primary w-12 h-12" />
     </div>
@@ -85,9 +57,9 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
            <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
                  <Sparkles size={16} /> {t('totalBalance')} ({displayCurrency})
-              </h3>
+              </p>
               <div className="flex items-start gap-4">
                  <h1 className="text-hero text-[#191c1d] dark:text-white">
                     {formatMoney(stats.total)}
@@ -116,11 +88,11 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
         
         <div className="lg:col-span-2 space-y-8">
            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold font-manrope flex items-center gap-2">
+              <h2 className="text-xl font-bold font-manrope flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                  {t('liveFeed')}
-              </h3>
-              <button onClick={() => setShowHelp(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full text-gray-400 transition">
+              </h2>
+              <button aria-label="Ayuda del panel principal" onClick={() => setShowHelp(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full text-gray-400 transition">
                  <HelpCircle size={20} />
               </button>
            </div>

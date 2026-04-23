@@ -11,25 +11,8 @@ import { TransactionType } from '@finan/shared';
 const COLORS = ['#0058bd', '#006e2c', '#b51b15', '#ef6719', '#7c2e00', '#4b8eff'];
 
 const Analytics = () => {
-  const { t, baseCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { t, baseCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, transactions } = useAppContext();
   const [showHelp, setShowHelp] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/transactions');
-        const data = await res.json();
-        setTransactions(data);
-      } catch (err) {
-        console.error('Analytics fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   const stats = useMemo(() => {
     if (!transactions.length) return null;
@@ -77,7 +60,7 @@ const Analytics = () => {
     return { pieData, areaData };
   }, [transactions, convert, visualConvert]);
 
-  if (loading || loadingRates) return (
+  if (loadingRates) return (
     <div className="flex h-screen items-center justify-center">
       <Loader2 className="animate-spin text-primary w-16 h-16" />
     </div>

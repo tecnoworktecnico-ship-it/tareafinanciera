@@ -18,205 +18,88 @@ Para una visión detallada de los principios técnicos, modelos de datos y flujo
 ```
 tareafinanciera/
 ├── shared/              # Tipos TypeScript compartidos (Currency, Transaction, etc.)
-├── backend/             # API REST (Express + SQLite + Zod validation)
+├── backend/             # API REST (Express + SQLite + Zod validation + Cache Pre-warm)
 ├── frontend/            # Dashboard UI (React + Vite + Tailwind CSS)
 │   └── src/
-│       ├── components/  # HelpModal, Sidebar, AnimatedBackground, Ticker
-│       ├── pages/       # Dashboard, Transactions, Accounts, Analytics, Settings
-│       ├── context/     # AppContext (tema, idioma, moneda base, sonidos)
-│       └── i18n/        # Sistema de traducción ES/EN (translations.ts)
-├── analytics-engine/    # Worker de análisis (conversión de divisas + clasificación)
+│       ├── components/  # Sidebar, Ticker, Calculator, Forms
+│       ├── pages/       # Dashboard, Transactions, Accounts, Analytics, Budgets, Calculator
+│       ├── context/     # AppContext (tema, idioma, moneda base, cotizaciones)
+│       └── i18n/        # Sistema de traducción ES/EN
+├── analytics-engine/    # Motor de auditoría y análisis proactivo
 ├── .env.example         # Plantilla de variables de entorno
 └── pnpm-workspace.yaml  # Configuración PNPM Workspaces
 ```
 
 ---
 
-## ✨ Features
+## ✨ Features Premium
 
-### 🏦 Módulo de Cuentas
-- CRUD completo de cuentas bancarias y billeteras
-- Soporte de divisa personalizada por cuenta (USD, EUR, ARS, PEN)
-- **Balances reales**: cada transacción/transferencia actualiza el saldo en SQLite al instante
-- **Transferencias** entre cuentas propias con lógica atómica en el backend
-- **Vista de historial** por cuenta (click en cualquier tarjeta)
-- **Privacidad Visual**: botón para ocultar/mostrar saldos con asteriscos (`****`)
+### 🏦 Módulo de Cuentas & Presupuestos
+- **Saldos Reales**: Cada transacción actualiza el saldo en SQLite de forma atómica.
+- **Doble Divisa**: Visualización simultánea del monto nativo y su equivalente en la divisa de preferencia.
+- **Presupuestos**: Control de gastos por categoría con gráficos de progreso interactivos.
 
-### 💳 Módulo de Transacciones
-- Registro de Ingresos, Gastos y Transferencias
-- Selector de cuenta de origen obligatorio (actualiza balance automáticamente)
-- Categorías predefinidas + creación de categorías personalizadas al vuelo
-- **Modal de Recibo Detallado**: click en cualquier transacción para ver ID, cuenta, monto, hora
-- Lista se refresca en vivo
+### 💳 Transacciones Inteligentes
+- Registro multidivisa con conversión automática a moneda base para reportes.
+- Historial detallado con modales de recibo.
+- **Transferencias**: Movimientos entre cuentas propias con integridad garantizada.
 
-### 📊 Motor de Estadísticas (Real Data)
-- **Gráfico de Balance Diario** (últimos 30 días): barras duales Ingresos/Gastos con tooltips interactivos
-- **Tendencia Mensual**: historial agrupado por mes con etiquetas Ahorro/Déficit
-- **Categorización Real**: porcentajes calculados sobre transacciones reales
-- **Normalización Multidivisa**: todas las cifras se convierten a la Moneda Base configurada antes de graficar
+### 📊 Análisis & Analytics
+- **Visualización Proactiva**: Gráficos de balance diario, tendencia mensual y distribución por categoría.
+- **Normalización**: Todas las cifras se convierten a la moneda base del usuario para comparaciones coherentes.
 
-### 🌍 Internacionalización (i18n)
-- Español e Inglés completos (incluye todo el contenido de ayuda)
-- Cambio de idioma instantáneo sin recarga de página
-
-### 🆘 Sistema de Ayuda Contextual
-- Modal de ayuda `(?)` disponible en las 5 secciones de la app
-- Contenido completamente bilingüe (ES/EN), reactivo al idioma activo
-- Diseño premium con Glassmorphism, animaciones y botón "Entendido"
-
-### 🎨 UI/UX Premium
-- Modo Oscuro y Claro totales (incluyendo menús desplegables)
-- Ticker de cotizaciones en tiempo real (ExchangeRate-API, refresco 1h)
-- Efectos de sonido UI para interacciones clave
-- Animaciones de entrada/salida en todos los modales
-- Diseño Glassmorphism consistente
+### 🧮 Calculadora Financiera
+- **Conversión Real-time**: Intercambio rápido de divisas.
+- **Compra/Venta**: Cálculo de spread y resultados netos para operaciones de cambio.
+- **Comparador**: Vista de un monto en todas las monedas soportadas de un vistazo.
 
 ---
 
-## 🚀 Instalación
+## 🚀 Instalación & Uso
 
 ### Prerrequisitos
 - Node.js 18+
 - PNPM (`npm install -g pnpm`)
 
-### 1. Clonar e instalar dependencias
-
+### 1. Preparación
 ```bash
 git clone https://github.com/tecnoworktecnico-ship-it/tareafinanciera.git
 cd tareafinanciera
 pnpm install
-```
-
-### 2. Configurar variables de entorno
-
-```bash
 cp .env.example .env
 ```
+*Edita `.env` y coloca tu API Key de ExchangeRate-API.*
 
-Edita `.env` y completa los valores:
-
-```env
-EXCHANGE_RATE_API_KEY=tu_api_key_aqui   # https://exchangerate-api.com (free)
-BACKEND_PORT=3001
-DEFAULT_BASE_CURRENCY=USD
-VITE_DEFAULT_CURRENCY=USD          # Debe coincidir con DEFAULT_BASE_CURRENCY
-```
-
-### 3. Levantar los servicios (3 terminales)
-
+### 2. Ejecución (Monorepo Mode)
 ```bash
-# Terminal 1 - Backend API
-cd backend && pnpm run dev
-
-# Terminal 2 - Frontend Dashboard
-cd frontend && pnpm run dev
-
-# Terminal 3 - Analytics Engine (opcional)
-cd analytics-engine && pnpm run dev
+pnpm dev
 ```
+*Este comando levantará el Backend, el Frontend y el Analytics Engine simultáneamente.*
 
-El dashboard estará disponible en **http://localhost:5173**  
-La API REST en **http://localhost:3001**  
-Documentación Swagger en **http://localhost:3001/docs**
+- **Dashboard:** http://localhost:5173
+- **API Docs:** http://localhost:3001/docs
 
 ---
 
-## 🔌 API Endpoints
+## 📅 Changelog Reciente
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/api/transactions` | Listar transacciones |
-| `POST` | `/api/transactions` | Crear transacción (actualiza balance de cuenta) |
-| `GET` | `/api/accounts` | Listar cuentas con sus saldos actuales |
-| `POST` | `/api/accounts` | Crear nueva cuenta |
-| `GET` | `/api/exchange-rates?base=USD` | Cotizaciones en tiempo real |
-| `GET` | `/api/config` | Configuración del sistema |
+### v3.1.0 — Performance & Architecture Sync
+- ⚡ **Local Font Hosting**: Migrado a Fontsource para eliminar CLS y dependencia de Google Fonts.
+- ⚡ **Lazy Loading**: Implementado code splitting por ruta para mejorar el LCP.
+- ⚡ **Centralización de Datos**: Sincronización global de transacciones y cotizaciones vía `AppContext`.
+- ⚡ **Ticker Optimizado**: Eliminado polling redundante en el frontend.
 
-### Ejemplo POST `/api/transactions`
-
-```json
-{
-  "accountId": "a1",
-  "amount": 150.50,
-  "type": "EXPENSE",
-  "category": "Alimentación",
-  "description": "Supermercado",
-  "currency": "ARS"
-}
-```
-
-### Ejemplo Transferencia entre Cuentas
-
-```json
-{
-  "accountId": "a1",
-  "targetAccountId": "a2",
-  "amount": 500,
-  "type": "TRANSFER",
-  "category": "Transferencia",
-  "description": "Movimiento entre carteras",
-  "currency": "USD"
-}
-```
-
-**Errores 400** cuando el payload es inválido:
-```json
-{
-  "error": "Datos inválidos",
-  "details": [{ "message": "Moneda no soportada. Use USD, EUR, ARS o PEN." }]
-}
-```
+### v3.0.0 — SmartPro Edition
+- ✅ **Calculadora Financiera**: Integrada con 3 modos de operación.
+- ✅ **Visualización Dual**: Monto nativo + equivalente en divisa de visualización.
+- ✅ **Backend Pre-warm**: Carga de cotizaciones al inicio para evitar datos stale.
+- ✅ **Control de Presupuestos**: Implementación de límites por categoría y mes.
+- ✅ **Optimización de Startup**: Unificado el arranque con `pnpm dev` en el root.
+- ✅ **Persistencia Refinada**: Mejoras en la persistencia de tema, idioma y divisas en el frontend.
 
 ---
 
-## 🧪 Testear la API de divisas
-
-```bash
-cd analytics-engine
-npx tsx src/test-api.ts
-```
-
-Output esperado:
-```
-✅ Conexión exitosa. El Analytics Engine lee la cotización real.
-💵 1 USD = 0.8477 EUR
-💵 1 USD = 1358.52 ARS
-💵 1 USD = 3.3798 PEN
-```
-
----
-
-## 🛡️ Seguridad
-
-- El archivo `.env` está excluido del repositorio via `.gitignore`
-- **Nunca** subas tu API key a GitHub
-- Usa `.env.example` como referencia para nuevos colaboradores
-
----
-
-## 📌 Tecnologías
-
-| Capa | Stack |
-|------|-------|
-| Backend | Node.js, Express, SQLite, Zod, Swagger |
-| Frontend | React 18, Vite, Tailwind CSS, TypeScript |
-| Analytics | Node.js, TypeScript, ExchangeRate-API |
-| Shared | TypeScript types, PNPM Workspaces |
-| i18n | Sistema propio ES/EN en `translations.ts` |
-| UI | Lucide-React, Glassmorphism, Animaciones CSS |
-
----
-
-## 📅 Changelog
-
-### v2.0.0 — Integración Transaccional Completa
-- ✅ Backend actualiza saldos de cuentas en tiempo real tras cada transacción
-- ✅ Transferencias entre cuentas con lógica atómica
-- ✅ Modal de Recibo Detallado en Transacciones
-- ✅ Vista de Historial por Cuenta en Cuentas
-- ✅ Privacidad Visual (toggle ocultar/mostrar saldos)
-- ✅ Motor de Estadísticas con datos reales (normalización multidivisa)
-- ✅ Gráfico de Balance Diario (30 días) + Tendencia Mensual
-- ✅ Sistema de Ayuda Contextual bilingüe en las 5 secciones
-- ✅ Corrección de modo oscuro en todos los selectores (`<select>`)
-- ✅ Internacionalización completa (40 claves de ayuda EN/ES)
+## 🛡️ Seguridad & Diseño
+- Diseño **Glassmorphism** moderno con soporte para Modo Oscuro.
+- Validación estricta con **Zod** en todos los puntos de entrada de datos.
+- Arquitectura desacoplada y orientada a servicios.

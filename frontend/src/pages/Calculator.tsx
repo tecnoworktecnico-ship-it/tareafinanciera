@@ -105,6 +105,7 @@ const Calculator = () => {
 
               <button 
                 onClick={handleSwap}
+                aria-label="Intercambiar divisas"
                 className="p-4 bg-white dark:bg-slate-800 rounded-full shadow-lg hover:scale-110 transition active:scale-95 text-primary"
               >
                  <ArrowLeftRight size={24} />

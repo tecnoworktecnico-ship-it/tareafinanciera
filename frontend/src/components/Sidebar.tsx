@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setTab }) => {
               }}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group
                 ${isActive 
-                  ? 'bg-primary text-white shadow-xl shadow-primary/30 font-bold scale-[1.02]' 
+                  ? 'bg-blue-700 text-white shadow-xl shadow-blue-700/30 font-bold scale-[1.02]' 
                   : 'text-gray-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-primary'}
               `}
             >
@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setTab }) => {
 
       <div className="p-8">
         <div className="p-6 rounded-3xl bg-primary/5 dark:bg-primary/10 border border-primary/10">
-           <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Plan Actual</p>
+           <p className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 tracking-widest mb-1">Plan Actual</p>
            <p className="text-sm font-bold">Premium Enterprise</p>
         </div>
       </div>

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { WalletCards, Plus, CreditCard, Send, X, Eye, EyeOff, HelpCircle, Trash2, Pencil } from 'lucide-react';
 import HelpModal from '../components/HelpModal';
 import { Currency } from '@finan/shared';
 
 const Accounts = () => {
-  const { t, baseCurrency, playUiSound, displayCurrency, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
+  const { t, baseCurrency, playUiSound, displayCurrency, convert, visualConvert, formatMoney, loadingRates, transactions } = useAppContext();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
@@ -14,11 +14,15 @@ const Accounts = () => {
   const [formError, setFormError] = useState<string|null>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [editingAccount, setEditingAccount] = useState<any>(null);
-  const [accountTxs, setAccountTxs] = useState<any[]>([]);
   
   // Forms
   const [newAcc, setNewAcc] = useState({ name: '', currency: baseCurrency, balance: '' });
   const [transfer, setTransfer] = useState({ accountId: '', targetAccountId: '', amount: '' });
+
+  const accountTxs = useMemo(() => {
+    if (!selectedAccount) return [];
+    return transactions.filter((t: any) => t.accountId === selectedAccount.id || t.targetAccountId === selectedAccount.id);
+  }, [selectedAccount, transactions]);
 
   const fetchAccounts = () => {
     fetch('/api/accounts')
@@ -30,15 +34,6 @@ const Accounts = () => {
   useEffect(() => {
     fetchAccounts();
   }, []);
-
-  useEffect(() => {
-    if (selectedAccount) {
-      fetch('/api/transactions')
-        .then(res => res.json())
-        .then(data => setAccountTxs(data.filter((t: any) => t.accountId === selectedAccount.id || t.targetAccountId === selectedAccount.id)))
-        .catch(console.error);
-    }
-  }, [selectedAccount]);
 
   const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +122,7 @@ const Accounts = () => {
         </h2>
         <div className="flex gap-2">
             <button 
+               aria-label="Ayuda de cuentas"
                onClick={() => { playUiSound('click'); setShowHelp(true); }}
                className="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 p-2 rounded-lg shadow hover:bg-gray-200 dark:hover:bg-slate-600 transition"
                title="Ayuda de Cuentas"
@@ -136,7 +132,8 @@ const Accounts = () => {
             <button 
                onClick={() => { playUiSound('click'); setShowBalances(!showBalances); }}
                className="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg font-medium shadow hover:bg-gray-200 dark:hover:bg-slate-600 transition flex items-center justify-center"
-               title="Ocular/Mostrar saldos"
+               aria-label="Ocultar/mostrar saldos"
+               title="Ocultar/mostrar saldos"
             >
               {showBalances ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -256,10 +253,10 @@ const Accounts = () => {
                      <CreditCard size={24} className="opacity-80" />
                    </div>
                     <div className="flex gap-2">
-                       <button onClick={(e) => handleEditAccount(acc, e)} className="p-2 bg-white/20 rounded-lg hover:bg-white/40 transition">
+                       <button aria-label="Editar cuenta" onClick={(e) => handleEditAccount(acc, e)} className="p-2 bg-white/20 rounded-lg hover:bg-white/40 transition">
                           <Pencil size={18} />
                        </button>
-                       <button onClick={(e) => handleDeleteAccount(acc.id, e)} className="p-2 bg-white/20 rounded-lg hover:bg-red-500 transition">
+                       <button aria-label="Eliminar cuenta" onClick={(e) => handleDeleteAccount(acc.id, e)} className="p-2 bg-white/20 rounded-lg hover:bg-red-500 transition">
                           <Trash2 size={18} />
                        </button>
                     </div>

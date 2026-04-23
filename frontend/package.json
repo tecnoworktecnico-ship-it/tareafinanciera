@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "@finan/shared": "workspace:*",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/manrope": "^5.2.8",
     "lucide-react": "^1.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

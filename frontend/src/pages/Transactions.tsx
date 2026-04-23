@@ -5,8 +5,7 @@ import { ArrowRightLeft, ArrowUpRight, ArrowDownRight, Plus, HelpCircle, Search,
 import HelpModal from '../components/HelpModal';
 
 const Transactions = () => {
-  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, categories, addCategory } = useAppContext();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, categories, addCategory, transactions, fetchTransactions } = useAppContext();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,15 +53,11 @@ const Transactions = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [txRes, accRes] = await Promise.all([
-        fetch('/api/transactions'),
-        fetch('/api/accounts')
-      ]);
-      const txs = await txRes.json();
+      const accRes = await fetch('/api/accounts');
       const accs = await accRes.json();
-      setTransactions(Array.isArray(txs) ? txs : []);
       setAccounts(Array.isArray(accs) ? accs : []);
       if (accs.length > 0) setNewTx(prev => ({...prev, accountId: accs[0].id}));
+      await fetchTransactions();
     } catch (e) {
       console.error(e);
     } finally {
@@ -168,7 +163,7 @@ const Transactions = () => {
            <History className="text-primary w-8 h-8" /> {t('transactions')}
         </h2>
         <div className="flex gap-2">
-           <button onClick={() => setShowHelp(true)} className="p-3 bg-white/50 dark:bg-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-600 transition shadow-sm mr-2">
+           <button aria-label="Ayuda de transacciones" onClick={() => setShowHelp(true)} className="p-3 bg-white/50 dark:bg-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-600 transition shadow-sm mr-2">
               <HelpCircle className="text-gray-500 dark:text-gray-300" />
            </button>
            <button 
@@ -308,10 +303,10 @@ const Transactions = () => {
                </div>
                
                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => handleEdit(tx, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-primary transition shadow-sm">
+                  <button aria-label="Editar transaccion" onClick={(e) => handleEdit(tx, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-primary transition shadow-sm">
                      <Pencil size={16} />
                   </button>
-                  <button onClick={(e) => handleDelete(tx.id, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-red-500 transition shadow-sm">
+                  <button aria-label="Eliminar transaccion" onClick={(e) => handleDelete(tx.id, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-red-500 transition shadow-sm">
                      <Trash2 size={16} />
                   </button>
                </div>

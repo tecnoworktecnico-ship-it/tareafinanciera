@@ -6,9 +6,8 @@ import HelpModal from '../components/HelpModal';
 import { Currency } from '@finan/shared';
 
 const Budgets = () => {
-  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, categories, addCategory } = useAppContext();
+  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, categories, addCategory, transactions } = useAppContext();
   const [budgets, setBudgets] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -40,14 +39,9 @@ const Budgets = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [budRes, txRes] = await Promise.all([
-        fetch('/api/budgets'),
-        fetch('/api/transactions')
-      ]);
+      const budRes = await fetch('/api/budgets');
       const bData = await budRes.json();
-      const tData = await txRes.json();
       setBudgets(Array.isArray(bData) ? bData : []);
-      setTransactions(Array.isArray(tData) ? tData : []);
     } catch (e) {
       console.error('Error fetching budgets:', e);
     } finally {
@@ -147,7 +141,7 @@ const Budgets = () => {
              className="bg-white/50 dark:bg-slate-800 p-2 rounded-xl border-none ring-1 ring-gray-100 font-bold outline-none"
            />
            <div className="flex gap-2">
-              <button onClick={() => setShowHelp(true)} className="p-3 bg-white/50 dark:bg-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-600 transition shadow-sm">
+              <button aria-label="Ayuda de presupuestos" onClick={() => setShowHelp(true)} className="p-3 bg-white/50 dark:bg-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-600 transition shadow-sm">
                  <HelpCircle className="text-gray-500 dark:text-gray-300" />
               </button>
               <button 
@@ -175,7 +169,7 @@ const Budgets = () => {
                      </p>
                   </div>
                   <div className="flex gap-2">
-                     <button onClick={() => handleDelete(budget.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
+                     <button aria-label="Eliminar presupuesto" onClick={() => handleDelete(budget.id)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
                        <Trash2 size={18} />
                      </button>
                      <div className={`p-4 rounded-2xl ${isOver ? 'bg-red-100 text-red-600' : isNear ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>

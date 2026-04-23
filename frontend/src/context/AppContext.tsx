@@ -22,6 +22,8 @@ interface AppContextType {
   visualConvert: (amountARS: number, target?: Currency) => number; // ARS to Display
   formatMoney: (amount: number, currency?: string) => string;
   loadingRates: boolean;
+  transactions: any[]; // Using any[] for now or I can import Transaction
+  fetchTransactions: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,6 +48,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
   const [rates, setRates] = useState<Record<string, number>>({});
   const [categories, setCategories] = useState<string[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingRates, setLoadingRates] = useState(true);
 
   const fetchRates = useCallback(async () => {
@@ -71,6 +74,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const fetchTransactions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/transactions');
+      const data = await res.json();
+      if (Array.isArray(data)) setTransactions(data);
+    } catch (e) {
+      console.error('Error fetching transactions:', e);
+    }
+  }, []);
+
   const addCategory = async (name: string) => {
     try {
       const res = await fetch('/api/categories', {
@@ -91,9 +104,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchRates();
     fetchCategories();
+    fetchTransactions();
     const interval = setInterval(fetchRates, 60000);
     return () => clearInterval(interval);
-  }, [fetchRates, fetchCategories]);
+  }, [fetchRates, fetchCategories, fetchTransactions]);
 
   useEffect(() => {
     if (theme === 'dark') document.documentElement.classList.add('dark');
@@ -165,7 +179,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       language, setLanguage, baseCurrency,
       displayCurrency, setDisplayCurrency,
       theme, setTheme, soundEnabled, setSoundEnabled, t, playUiSound,
-      rates, categories, addCategory, convert, visualConvert, formatMoney, loadingRates
+      rates, categories, addCategory, convert, visualConvert, formatMoney, loadingRates,
+      transactions, fetchTransactions
     }}>
       {children}
     </AppContext.Provider>
