@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { TransactionType } from '@finan/shared';
-import { ArrowUpRight, ArrowDownRight, Activity, HelpCircle, Wallet, TrendingUp, Sparkles, Loader2, PlusCircle, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, HelpCircle, Wallet, TrendingUp, Sparkles, Loader2, PlusCircle, ArrowRight } from 'lucide-react';
 import HelpModal from '../components/HelpModal';
+import StatCard from '../components/StatCard';
 
 const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
-  const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates, transactions } = useAppContext();
+  const { t, displayCurrency, convert, visualConvert, formatMoney, loadingRates, transactions } = useAppContext();
   
   const currencyNames: Record<string, string> = {
     ARS: 'Pesos Argentinos',
@@ -48,114 +49,114 @@ const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
   );
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+    <div className="space-y-10 animate-in fade-in duration-700">
       
-      {/* Hero Section - Dynamic Conversion */}
-      <section className="relative px-8 py-12 glass-premium rounded-[2.5rem] overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
+      {/* Hero Section */}
+      <section className="relative p-12 glass-premium rounded-[3.5rem] overflow-hidden border border-white/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
            <div className="space-y-4">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                 <Sparkles size={16} /> {t('totalBalance')} ({displayCurrency})
-              </p>
-              <div className="flex items-start gap-4">
-                 <h1 className="text-hero text-[#191c1d] dark:text-white">
-                    {formatMoney(stats.total)}
-                 </h1>
+              <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full w-fit">
+                 <Sparkles size={14} className="text-primary" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{t('totalBalance')}</span>
               </div>
+              <h1 className="text-7xl font-manrope font-black tracking-tighter text-[#191c1d] dark:text-white">
+                 {formatMoney(stats.total)}
+              </h1>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">{displayCurrency} • GLOBAL BALANCE</p>
            </div>
            
-           <div className="flex gap-12">
-              <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('incomes')}</p>
-                 <p className="text-2xl font-manrope font-bold text-green-600 flex items-center gap-1">
-                    <ArrowUpRight size={20} strokeWidth={3} /> {formatMoney(stats.incomes)}
+           <div className="flex flex-col sm:flex-row gap-6">
+              <div className="p-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-sm min-w-[200px]">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">{t('incomes')}</p>
+                 <p className="text-3xl font-manrope font-bold text-green-600 flex items-center gap-2">
+                    <ArrowUpRight size={24} strokeWidth={3} /> {formatMoney(stats.incomes)}
                  </p>
               </div>
-              <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('expenses')}</p>
-                 <p className="text-2xl font-manrope font-bold text-[#b51b15] flex items-center gap-1">
-                    <ArrowDownRight size={20} strokeWidth={3} /> {formatMoney(stats.expenses)}
+              <div className="p-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-sm min-w-[200px]">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">{t('expenses')}</p>
+                 <p className="text-3xl font-manrope font-bold text-red-500 flex items-center gap-2">
+                    <ArrowDownRight size={24} strokeWidth={3} /> {formatMoney(stats.expenses)}
                  </p>
               </div>
            </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
         <div className="lg:col-span-2 space-y-8">
-           <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold font-manrope flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+           <div className="flex items-center justify-between px-2">
+              <h2 className="text-2xl font-manrope font-black flex items-center gap-3">
+                 <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
                  {t('liveFeed')}
               </h2>
-              <button aria-label="Ayuda del panel principal" onClick={() => setShowHelp(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full text-gray-400 transition">
-                 <HelpCircle size={20} />
+              <button onClick={() => setShowHelp(true)} className="p-3 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl text-gray-400 transition-all border border-transparent hover:border-gray-200">
+                 <HelpCircle size={22} />
               </button>
            </div>
 
            <div className="space-y-4">
               {recent.map((tx, i) => (
                 <div key={tx.id} 
-                  className="surface-card p-6 rounded-3xl flex items-center justify-between hover:translate-x-2 transition-all"
+                  className="surface-card p-6 rounded-[2rem] flex items-center justify-between group hover:translate-x-3 transition-all duration-300 border border-transparent hover:border-primary/10"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition ${tx.type === TransactionType.INCOME ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                        {tx.type === TransactionType.INCOME ? <ArrowUpRight /> : <ArrowDownRight />}
+                  <div className="flex items-center gap-6">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${tx.type === TransactionType.INCOME ? 'bg-green-100/50 text-green-700' : 'bg-red-50/50 text-red-700'} group-hover:scale-110 shadow-sm`}>
+                        {tx.type === TransactionType.INCOME ? <ArrowUpRight size={28} /> : <ArrowDownRight size={28} />}
                     </div>
                     <div>
-                      <p className="font-bold text-lg">{tx.description}</p>
-                      <p className="text-xs font-black text-gray-400 uppercase tracking-tighter">{tx.category} • {tx.timestamp}</p>
+                      <p className="font-bold text-xl dark:text-white">{tx.description}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{tx.category} • {new Date(tx.timestamp).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                     <p className={`text-xl font-manrope font-black ${tx.type === TransactionType.INCOME ? 'text-green-600' : 'text-[#191c1d] dark:text-white'}`}>
+                     <p className={`text-2xl font-manrope font-black ${tx.type === TransactionType.INCOME ? 'text-green-600' : 'text-[#191c1d] dark:text-white'}`}>
                         {tx.type === TransactionType.INCOME ? '+' : '-'}{formatMoney(tx.amount, tx.currency)}
                      </p>
                      {tx.currency !== displayCurrency && (
-                       <p className="text-[10px] font-bold text-gray-400">≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}</p>
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}</p>
                      )}
                   </div>
                 </div>
               ))}
+              
               {recent.length === 0 && (
-                <div className="p-16 text-center glass-premium border-2 border-dashed border-primary/20 rounded-[3rem] animate-in zoom-in duration-700">
-                   <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
-                      <PlusCircle size={40} />
+                <div className="p-20 text-center glass rounded-[3.5rem] border-2 border-dashed border-primary/10 animate-in zoom-in duration-700">
+                   <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-8 text-primary/40">
+                      <PlusCircle size={48} />
                    </div>
-                   <h3 className="text-2xl font-manrope font-black mb-3">Tu historial está vacío</h3>
-                   <p className="text-gray-500 mb-8 max-w-xs mx-auto text-sm">Comienza a registrar tus ingresos y gastos para ver estadísticas inteligentes en tiempo real.</p>
+                   <h3 className="text-3xl font-manrope font-black mb-4 dark:text-white">Nada por aquí aún</h3>
+                   <p className="text-gray-400 mb-10 max-w-sm mx-auto font-medium">Registra tus movimientos para activar el análisis inteligente en tiempo real.</p>
                    <button 
                      onClick={() => setTab('transactions')}
-                     className="gradient-cta flex items-center gap-3 px-8 py-4 rounded-2xl font-bold font-manrope shadow-xl shadow-primary/30 mx-auto hover:scale-105 transition"
+                     className="bg-primary text-white flex items-center gap-3 px-10 py-5 rounded-[2rem] font-black font-manrope shadow-2xl shadow-primary/40 mx-auto hover:scale-105 active:scale-95 transition-all"
                    >
-                      Registrar Primera Transacción <ArrowRight size={20} />
+                      NUEVA TRANSACCIÓN <ArrowRight size={24} />
                    </button>
                 </div>
               )}
            </div>
         </div>
 
-        <div className="space-y-6">
-           <div className="glass-premium p-8 rounded-[2rem] space-y-6 relative overflow-hidden">
-              <div className="relative z-10">
-                  <h3 className="font-bold flex items-center gap-2 mb-4"><TrendingUp size={18} className="text-primary"/> {t('monthlyHealth')}</h3>
-                  <p className="text-xs text-gray-500 mb-6 font-manrope">{t('activeVisualization')} {displayCurrency}. {t('accountingBackup')}</p>
-                 <div className="w-full h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full w-[100%]"></div>
-                 </div>
-              </div>
-           </div>
+        <div className="space-y-8">
+           <StatCard 
+              label={t('monthlyHealth') || 'Salud Mensual'}
+              value="100%"
+              icon={<TrendingUp size={24} className="text-primary" />}
+              colorClass="bg-primary text-primary"
+              subValue={`${t('activeVisualization') || 'Visualización en'} ${displayCurrency}`}
+           />
 
-           <div className="glass p-6 rounded-[2rem] flex items-center gap-4">
-              <div className="p-3 bg-primary text-white rounded-2xl"><Wallet /></div>
+           <div className="glass-premium p-8 rounded-[2rem] flex items-center gap-6 group hover:-translate-y-1 transition-all">
+              <div className="p-5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform"><Wallet size={28} /></div>
               <div>
-                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">DIVISA ACTIVA</p>
-                 <p className="font-bold">{displayCurrency} - {currencyNames[displayCurrency] || displayCurrency}</p>
+                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">DIVISA ACTIVA</p>
+                 <p className="font-manrope font-black text-xl dark:text-white">{displayCurrency}</p>
+                 <p className="text-[10px] font-bold text-gray-400">{currencyNames[displayCurrency] || displayCurrency}</p>
               </div>
            </div>
         </div>

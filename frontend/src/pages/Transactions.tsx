@@ -261,112 +261,85 @@ const Transactions = () => {
                     </div>
                   </div>
                </div>
-               <div className="flex justify-end gap-3">
-                  <button type="button" onClick={() => { setShowForm(false); setEditingTx(null); }} className="px-8 py-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-2xl font-bold hover:bg-gray-200 transition">
-                     {t('cancelBtn')}
-                  </button>
-                  <button type="submit" className="gradient-cta px-12 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition">
-                     {editingTx ? 'Actualizar' : 'Confirmar'} {t('addTransaction')}
-                  </button>
-               </div>
-           </form>
-        </div>
-      )}
+                 </div>
+              </div>
+              
+              <div className="flex items-center gap-6">
+                 <div className="text-right">
+                    <p className={`text-xl font-manrope font-black ${
+                       tx.type === 'INCOME' ? 'text-green-600' : tx.type === 'TRANSFER' ? 'text-blue-600' : 'text-red-600'
+                    }`}>
+                       {tx.type === 'INCOME' ? '+' : tx.type === 'TRANSFER' ? '' : '-'}{formatMoney(tx.amount, tx.currency)}
+                    </p>
+                    {tx.currency !== displayCurrency && (
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                          ≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}
+                       </p>
+                    )}
+                 </div>
+                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                       onClick={(e) => { e.stopPropagation(); setEditingTx(tx); setShowForm(true); }}
+                       className="p-2 hover:bg-blue-50 hover:text-blue-500 rounded-xl transition"
+                    >
+                       <Pencil size={18} />
+                    </button>
+                    <button 
+                       onClick={(e) => { e.stopPropagation(); handleDelete(tx.id); }}
+                       className="p-2 hover:bg-red-50 hover:text-red-500 rounded-xl transition"
+                    >
+                       <Trash2 size={18} />
+                    </button>
+                 </div>
+              </div>
+           </div>
+         ))}
 
-      <div className="space-y-4">
-        {paginatedTx.map((tx, i) => (
-          <div 
-            key={tx.id} 
-            onClick={() => { playUiSound('click'); setSelectedTx(tx); }} 
-            className="surface-card p-6 rounded-3xl flex items-center justify-between hover:translate-x-2 transition-all cursor-pointer group relative"
-          >
-            <div className="flex items-center gap-6">
-               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 ${tx.type === TransactionType.INCOME ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  {tx.type === TransactionType.INCOME ? <ArrowUpRight /> : <ArrowDownRight />}
-               </div>
-               <div>
-                  <p className="text-lg font-manrope font-bold">{tx.description}</p>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{tx.category} • {tx.timestamp}</p>
-               </div>
-            </div>
-            
-            <div className="flex items-center gap-6">
-               <div className="text-right">
-                        <p className="text-2xl font-manrope font-black truncate max-w-[200px] md:max-w-none">
-                           {tx.type === TransactionType.INCOME ? '+' : '-'}{formatMoney(tx.amount, tx.currency)}
-                        </p>
-                        {tx.currency !== displayCurrency && (
-                          <p className="text-[10px] font-bold text-gray-400">
-                             ≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}
-                          </p>
-                        )}
-               </div>
-               
-               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button aria-label="Editar transaccion" onClick={(e) => handleEdit(tx, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-primary transition shadow-sm">
-                     <Pencil size={16} />
-                  </button>
-                  <button aria-label="Eliminar transaccion" onClick={(e) => handleDelete(tx.id, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-red-500 transition shadow-sm">
-                     <Trash2 size={16} />
-                  </button>
-               </div>
-            </div>
-          </div>
-        ))}
-        {filteredTx.length === 0 && <div className="p-12 text-center text-gray-400">No se encontraron transacciones.</div>}
+         {filteredTx.length === 0 && (
+           <div className="text-center py-20 glass rounded-[3rem]">
+              <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                 <History size={40} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-500">No se encontraron movimientos</h3>
+              <p className="text-gray-400 text-sm mt-1">Intenta ajustar los filtros o la búsqueda</p>
+           </div>
+         )}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 py-8">
+        <div className="flex justify-center items-center gap-4 mt-8 pb-10">
            <button 
-             disabled={currentPage === 1} 
-             onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0,0); }}
-             className="p-3 bg-white dark:bg-slate-800 rounded-2xl disabled:opacity-30 shadow-sm transition hover:scale-110"
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+              className="p-3 glass rounded-2xl disabled:opacity-30 hover:bg-white transition shadow-sm"
            >
               <ChevronLeft />
            </button>
-           <span className="font-manrope font-black text-sm uppercase tracking-widest">
-              Página {currentPage} de {totalPages}
-           </span>
+           <span className="font-manrope font-black text-gray-500">{page} / {totalPages}</span>
            <button 
-             disabled={currentPage === totalPages} 
-             onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0,0); }}
-             className="p-3 bg-white dark:bg-slate-800 rounded-2xl disabled:opacity-30 shadow-sm transition hover:scale-110"
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+              className="p-3 glass rounded-2xl disabled:opacity-30 hover:bg-white transition shadow-sm"
            >
               <ChevronRight />
            </button>
         </div>
       )}
 
-      {selectedTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedTx(null)}>
-           <div className="glass-premium p-10 rounded-[2.5rem] w-full max-w-md" onClick={e=>e.stopPropagation()}>
-               <div className="text-center mb-8">
-                  <div className={`mx-auto w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-xl ${selectedTx.type === 'INCOME' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                     {selectedTx.type === 'INCOME' ? <ArrowUpRight size={40} /> : <ArrowDownRight size={40}/>}
-                  </div>
-                  <h2 className="text-4xl font-manrope font-black mb-2">{formatMoney(selectedTx.amount, selectedTx.currency)}</h2>
-                  {selectedTx.currency !== displayCurrency && (
-                    <p className="text-primary font-bold tracking-widest uppercase text-xs">
-                       ≈ {formatMoney(visualConvert(convert(selectedTx.amount, selectedTx.currency)), displayCurrency)}
-                    </p>
-                  )}
-               </div>
-               
-               <div className="space-y-4 surface-card p-6 rounded-3xl mb-8">
-                  <div className="flex justify-between items-center text-sm">
-                     <span className="text-gray-400 font-bold uppercase text-[10px]">Descripción</span>
-                     <span className="font-bold">{selectedTx.description}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                     <span className="text-gray-400 font-bold uppercase text-[10px]">Categoría</span>
-                     <span className="bg-primary/5 text-primary px-3 py-1 rounded-full text-xs font-bold">{selectedTx.category}</span>
-                  </div>
-               </div>
+      {showForm && (
+        <TransactionForm 
+           initialData={editingTx}
+           accounts={accounts}
+           onClose={() => { setShowForm(false); setEditingTx(null); }}
+           onSuccess={fetchTransactions}
+        />
+      )}
 
-               <button onClick={() => setSelectedTx(null)} className="w-full p-4 rounded-2xl font-bold bg-gray-100 dark:bg-slate-700 transition">Cerrar</button>
-           </div>
-        </div>
+      {selectedTx && (
+        <TransactionDetailModal 
+           transaction={selectedTx}
+           onClose={() => setSelectedTx(null)}
+        />
       )}
 
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} title={t('transactions')}>
