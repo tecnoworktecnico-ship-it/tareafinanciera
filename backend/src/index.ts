@@ -14,8 +14,39 @@ app.set('json spaces', 2);
 const dbPath = path.join(__dirname, '..', 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
+let ratesCache: { rates: Record<string, number>, timestamp: number } | null = null;
+const CACHE_DURATION = 3600000; // 1 hour
+
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS Categories (id TEXT PRIMARY KEY, name TEXT)`);
+  
+  db.run(`CREATE TABLE IF NOT EXISTS Transactions (
+    id TEXT PRIMARY KEY,
+    accountId TEXT,
+    amount REAL,
+    type TEXT,
+    category TEXT,
+    timestamp TEXT,
+    description TEXT,
+    targetAccountId TEXT,
+    currency TEXT
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS Accounts (
+    id TEXT PRIMARY KEY,
+    userId TEXT,
+    name TEXT,
+    currency TEXT,
+    balance REAL
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS Budgets (
+    id TEXT PRIMARY KEY,
+    category TEXT,
+    limitAmount REAL,
+    currency TEXT,
+    month TEXT
+  )`);
 
   // Seed Data
   db.get("SELECT COUNT(*) as count FROM Categories", (err, row: any) => {
@@ -88,12 +119,77 @@ app.post('/api/accounts', (req, res) => {
   }
 });
 
+app.patch('/api/accounts/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, currency, balance } = req.body;
+  db.run(
+    `UPDATE Accounts SET name = ?, currency = ?, balance = ? WHERE id = ?`,
+    [name, currency, balance, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ updated: true });
+    }
+  );
+});
+
+app.delete('/api/accounts/:id', (req, res) => {
+  const { id } = req.params;
+  // Optional: check if there are transactions first
+  db.get('SELECT COUNT(*) as count FROM Transactions WHERE accountId = ?', [id], (err, row: any) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row.count > 0) {
+      return res.status(400).json({ error: "No se puede eliminar una cuenta con transacciones activas. Elimina primero las transacciones." });
+    }
+    db.run('DELETE FROM Accounts WHERE id = ?', [id], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ deleted: true });
+    });
+  });
+});
+
 app.get('/api/transactions', (req, res) => {
   /* #swagger.tags = ['Transactions']
-     #swagger.description = 'Obtener historial de transacciones' */
-  db.all('SELECT * FROM Transactions ORDER BY timestamp DESC', [], (err, rows) => {
+     #swagger.description = 'Obtener historial de transacciones con paginación opcional' */
+  const { page, limit } = req.query;
+  
+  if (page && limit) {
+    const p = parseInt(page as string);
+    const l = parseInt(limit as string);
+    const offset = (p - 1) * l;
+    
+    db.get('SELECT COUNT(*) as total FROM Transactions', (err, countRow: any) => {
+      if (err) return res.status(500).json({ error: err.message });
+      db.all('SELECT * FROM Transactions ORDER BY timestamp DESC LIMIT ? OFFSET ?', [l, offset], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ data: rows, total: countRow.total });
+      });
+    });
+  } else {
+    db.all('SELECT * FROM Transactions ORDER BY timestamp DESC', [], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    });
+  }
+});
+
+app.patch('/api/transactions/:id', (req, res) => {
+  const { id } = req.params;
+  const { description, category, amount, type } = req.body;
+  db.run(
+    `UPDATE Transactions SET description = ?, category = ?, amount = ?, type = ? WHERE id = ?`,
+    [description, category, amount, type, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ updated: true });
+    }
+  );
+});
+
+app.delete('/api/transactions/:id', (req, res) => {
+  const { id } = req.params;
+  db.run('DELETE FROM Transactions WHERE id = ?', [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    res.json({ deleted: true });
   });
 });
 
@@ -165,19 +261,38 @@ app.post('/api/categories', (req, res) => {
   });
 });
 
-app.get('/api/exchange-rates', (req, res) => {
+app.get('/api/exchange-rates', async (req, res) => {
   /* #swagger.tags = ['Rates']
-     #swagger.description = 'Obtener cotizaciones relativas a ARS (Pivot)' */
+     #swagger.description = 'Obtener cotizaciones reales desde ExchangeRate-API con caché' */
   
-  // Prices in ARS (Pivot)
-  const rates: Record<string, number> = {
-    USD: 1050,
-    EUR: 1141,
-    PEN: 280,
-    ARS: 1
-  };
+  const now = Date.now();
+  if (ratesCache && (now - ratesCache.timestamp < CACHE_DURATION)) {
+    return res.json({ base: 'ARS', rates: ratesCache.rates, timestamp: new Date(ratesCache.timestamp).toISOString(), source: 'cache' });
+  }
 
-  res.json({ base: 'ARS', rates, timestamp: new Date().toISOString() });
+  const apiKey = process.env.EXCHANGE_RATE_API_KEY;
+  const fallbackRates = { USD: 1050, EUR: 1141, PEN: 280, ARS: 1 };
+
+  try {
+    if (apiKey && apiKey !== 'your_free_api_key_here') {
+      const response = await fetch(`https://v6.exchangerate-api.com/v6/${apiKey}/latest/ARS`);
+      const data = await response.json();
+      if (data.result === 'success') {
+        const rates = {
+          USD: 1 / data.conversion_rates.USD,
+          EUR: 1 / data.conversion_rates.EUR,
+          PEN: 1 / data.conversion_rates.PEN,
+          ARS: 1
+        };
+        ratesCache = { rates, timestamp: now };
+        return res.json({ base: 'ARS', rates, timestamp: new Date().toISOString(), source: 'api' });
+      }
+    }
+  } catch (e) {
+    console.error('ExchangeRate-API Error:', e);
+  }
+
+  res.json({ base: 'ARS', rates: fallbackRates, timestamp: new Date().toISOString(), source: 'fallback' });
 });
 
 app.get('/api/config', (req, res) => {
@@ -192,6 +307,14 @@ app.get('/api/budgets', (req, res) => {
   db.all('SELECT * FROM Budgets', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
+  });
+});
+
+app.delete('/api/budgets/:id', (req, res) => {
+  const { id } = req.params;
+  db.run('DELETE FROM Budgets WHERE id = ?', [id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: true });
   });
 });
 

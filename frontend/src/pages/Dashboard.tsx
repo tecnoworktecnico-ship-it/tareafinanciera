@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { TransactionType } from '@finan/shared';
-import { ArrowUpRight, ArrowDownRight, Activity, HelpCircle, Wallet, TrendingUp, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Activity, HelpCircle, Wallet, TrendingUp, Sparkles, Loader2, PlusCircle, ArrowRight } from 'lucide-react';
 import HelpModal from '../components/HelpModal';
 
-const Dashboard = () => {
+const Dashboard = ({ setTab }: { setTab: (tab: string) => void }) => {
   const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
   const [transactions, setTransactions] = useState<any[]>([]);
   
@@ -142,13 +142,29 @@ const Dashboard = () => {
                   </div>
                   <div className="text-right">
                      <p className={`text-xl font-manrope font-black ${tx.type === TransactionType.INCOME ? 'text-green-600' : 'text-[#191c1d] dark:text-white'}`}>
-                        {tx.type === TransactionType.INCOME ? '+' : '-'} {formatMoney(visualConvert(convert(tx.amount, tx.currency)))}
+                        {tx.type === TransactionType.INCOME ? '+' : '-'}{formatMoney(tx.amount, tx.currency)}
                      </p>
-                     <p className="text-[10px] font-bold text-gray-400">≈ {formatMoney(convert(tx.amount, tx.currency))}</p>
+                     {tx.currency !== displayCurrency && (
+                       <p className="text-[10px] font-bold text-gray-400">≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}</p>
+                     )}
                   </div>
                 </div>
               ))}
-              {recent.length === 0 && <div className="p-12 text-center text-gray-400">Iniciando feed de datos...</div>}
+              {recent.length === 0 && (
+                <div className="p-16 text-center glass-premium border-2 border-dashed border-primary/20 rounded-[3rem] animate-in zoom-in duration-700">
+                   <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+                      <PlusCircle size={40} />
+                   </div>
+                   <h3 className="text-2xl font-manrope font-black mb-3">Tu historial está vacío</h3>
+                   <p className="text-gray-500 mb-8 max-w-xs mx-auto text-sm">Comienza a registrar tus ingresos y gastos para ver estadísticas inteligentes en tiempo real.</p>
+                   <button 
+                     onClick={() => setTab('transactions')}
+                     className="gradient-cta flex items-center gap-3 px-8 py-4 rounded-2xl font-bold font-manrope shadow-xl shadow-primary/30 mx-auto hover:scale-105 transition"
+                   >
+                      Registrar Primera Transacción <ArrowRight size={20} />
+                   </button>
+                </div>
+              )}
            </div>
         </div>
 

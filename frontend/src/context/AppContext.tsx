@@ -27,12 +27,22 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('es');
-  const [displayCurrency, setDisplayCurrency] = useState<Currency>(Currency.USD);
+  const [language, setLanguage] = useState<Language>(
+    () => (localStorage.getItem('language') as Language) || 'es'
+  );
+  const [displayCurrency, setDisplayCurrency] = useState<Currency>(
+    () => (localStorage.getItem('displayCurrency') as Currency) || Currency.USD
+  );
   const baseCurrency = Currency.ARS; // Hardcoded fixed base
   
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    () => (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
+  );
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  useEffect(() => { localStorage.setItem('displayCurrency', displayCurrency); }, [displayCurrency]);
+  useEffect(() => { localStorage.setItem('theme', theme); }, [theme]);
+  useEffect(() => { localStorage.setItem('language', language); }, [language]);
   
   const [rates, setRates] = useState<Record<string, number>>({});
   const [categories, setCategories] = useState<string[]>([]);

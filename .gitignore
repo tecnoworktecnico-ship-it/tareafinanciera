@@ -34,3 +34,6 @@ Thumbs.db
 
 # Vite
 frontend/.vite/
+
+# Internal model data
+brain/

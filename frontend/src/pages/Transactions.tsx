@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { Currency, TransactionType } from '@finan/shared';
-import { ArrowRightLeft, ArrowUpRight, ArrowDownRight, Plus, HelpCircle, Search, Filter, History, Loader2 } from 'lucide-react';
+import { ArrowRightLeft, ArrowUpRight, ArrowDownRight, Plus, HelpCircle, Search, Filter, History, Loader2, Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import HelpModal from '../components/HelpModal';
 
 const Transactions = () => {
@@ -11,8 +11,21 @@ const Transactions = () => {
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [editingTx, setEditingTx] = useState<any>(null);
   const [newTx, setNewTx] = useState({ description: '', amount: '', category: categories[0] || 'food', type: TransactionType.EXPENSE, currency: baseCurrency, accountId: '' });
   const [showHelp, setShowHelp] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Filters State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('ALL');
+  const [filterAccount, setFilterAccount] = useState<string>('ALL');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Sync category state when categories load
   useEffect(() => {
@@ -35,29 +48,29 @@ const Transactions = () => {
        setNewTx(prev => ({ ...prev, category: val }));
     }
   };
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
 
 
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [txRes, accRes] = await Promise.all([
+        fetch('/api/transactions'),
+        fetch('/api/accounts')
+      ]);
+      const txs = await txRes.json();
+      const accs = await accRes.json();
+      setTransactions(Array.isArray(txs) ? txs : []);
+      setAccounts(Array.isArray(accs) ? accs : []);
+      if (accs.length > 0) setNewTx(prev => ({...prev, accountId: accs[0].id}));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [txRes, accRes] = await Promise.all([
-          fetch('/api/transactions'),
-          fetch('/api/accounts')
-        ]);
-        const txs = await txRes.json();
-        const accs = await accRes.json();
-        setTransactions(txs);
-        setAccounts(accs);
-        if (accs.length > 0) setNewTx(prev => ({...prev, accountId: accs[0].id}));
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -67,12 +80,13 @@ const Transactions = () => {
     const numAmountOrig = parseFloat(newTx.amount);
     if (isNaN(numAmountOrig)) return;
 
-    // We convert everything to ARS for the database (Account Base)
     const amountARS = convert(numAmountOrig, newTx.currency);
 
     try {
-        const res = await fetch('/api/transactions', {
-            method: 'POST',
+        const url = editingTx ? `/api/transactions/${editingTx.id}` : '/api/transactions';
+        const method = editingTx ? 'PATCH' : 'POST';
+        const res = await fetch(url, {
+            method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...newTx, amount: amountARS, currency: 'ARS' })
         });
@@ -80,9 +94,10 @@ const Transactions = () => {
         if (!res.ok) {
             setFormError(data.error + (data.details ? ": " + data.details[0].message : ""));
         } else {
-            setTransactions([data, ...transactions]);
+            fetchData();
             setNewTx({ ...newTx, description: '', amount: '' });
             setShowForm(false);
+            setEditingTx(null);
             playUiSound('success');
         }
     } catch(err: any) {
@@ -90,10 +105,54 @@ const Transactions = () => {
     }
   };
 
-  const filteredTx = transactions.filter(tx => 
-    tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('¿Eliminar esta transacción?')) return;
+    try {
+      const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        playUiSound('click');
+        fetchData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleEdit = (tx: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTx(tx);
+    setNewTx({
+      description: tx.description,
+      amount: tx.amount.toString(),
+      category: tx.category,
+      type: tx.type,
+      currency: 'ARS',
+      accountId: tx.accountId
+    });
+    setShowForm(true);
+    playUiSound('click');
+  };
+
+  const filteredTx = React.useMemo(() => {
+    return transactions.filter(tx => {
+      const matchesSearch = tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          tx.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = filterType === 'ALL' || tx.type === filterType;
+      const matchesAccount = filterAccount === 'ALL' || tx.accountId === filterAccount;
+      const matchesDateFrom = !filterDateFrom || tx.timestamp >= filterDateFrom;
+      const matchesDateTo = !filterDateTo || tx.timestamp <= filterDateTo;
+      
+      return matchesSearch && matchesType && matchesAccount && matchesDateFrom && matchesDateTo;
+    });
+  }, [transactions, searchTerm, filterType, filterAccount, filterDateFrom, filterDateTo]);
+
+  const paginatedTx = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredTx.slice(start, start + itemsPerPage);
+  }, [filteredTx, currentPage]);
+
+  const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
 
   if (loading || loadingRates) return (
     <div className="flex h-96 items-center justify-center">
@@ -121,22 +180,49 @@ const Transactions = () => {
         </div>
       </header>
 
-      <div className="flex flex-col md:flex-row gap-4">
-         <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input 
-               type="text" 
-               placeholder="Busca por descripción o categoría..." 
-               value={searchTerm}
-               onChange={e => setSearchTerm(e.target.value)}
-               className="w-full pl-12 pr-4 py-4 rounded-3xl surface-card border-none outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary transition font-manrope font-medium"
-            />
+      <div className="space-y-4">
+         <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-[2] relative">
+               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+               <input 
+                  type="text" 
+                  placeholder="Busca por descripción o categoría..." 
+                  value={searchTerm}
+                  onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  className="w-full pl-12 pr-4 py-4 rounded-3xl surface-card border-none outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-primary transition font-manrope font-medium"
+               />
+            </div>
+            <select 
+              value={filterType} 
+              onChange={e => { setFilterType(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none appearance-none"
+            >
+               <option value="ALL">Todos los tipos</option>
+               <option value="INCOME">Ingresos</option>
+               <option value="EXPENSE">Gastos</option>
+               <option value="TRANSFER">Transferencias</option>
+            </select>
+         </div>
+
+         <div className="flex flex-col md:flex-row gap-4">
+            <select 
+              value={filterAccount} 
+              onChange={e => { setFilterAccount(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none appearance-none"
+            >
+               <option value="ALL">Todas las cuentas</option>
+               {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+            </select>
+            <div className="flex-1 flex gap-2">
+               <input type="date" value={filterDateFrom} onChange={e => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none" />
+               <input type="date" value={filterDateTo} onChange={e => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className="flex-1 bg-white dark:bg-slate-800 p-4 rounded-3xl ring-1 ring-gray-100 font-bold outline-none" />
+            </div>
          </div>
       </div>
 
       {showForm && (
         <div className="glass-premium p-8 rounded-[2rem] space-y-6 animate-in slide-in-from-top-4 fade-in duration-500">
-           <h3 className="text-xl font-bold font-manrope">Nueva Transacción Multidivisa</h3>
+           <h3 className="text-xl font-bold font-manrope">{editingTx ? 'Editar' : 'Nueva'} Transacción Multidivisa</h3>
            {formError && <div className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-xl">{formError}</div>}
            <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-2">
@@ -181,11 +267,11 @@ const Transactions = () => {
                   </div>
                </div>
                <div className="flex justify-end gap-3">
-                  <button type="button" onClick={() => setShowForm(false)} className="px-8 py-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-2xl font-bold hover:bg-gray-200 transition">
+                  <button type="button" onClick={() => { setShowForm(false); setEditingTx(null); }} className="px-8 py-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-2xl font-bold hover:bg-gray-200 transition">
                      Cancelar
                   </button>
                   <button type="submit" className="gradient-cta px-12 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition">
-                     Confirmar {t('addTransaction')}
+                     {editingTx ? 'Actualizar' : 'Confirmar'} {t('addTransaction')}
                   </button>
                </div>
            </form>
@@ -193,11 +279,11 @@ const Transactions = () => {
       )}
 
       <div className="space-y-4">
-        {filteredTx.map((tx, i) => (
+        {paginatedTx.map((tx, i) => (
           <div 
             key={tx.id} 
             onClick={() => { playUiSound('click'); setSelectedTx(tx); }} 
-            className="surface-card p-6 rounded-3xl flex items-center justify-between hover:translate-x-2 transition-all cursor-pointer group"
+            className="surface-card p-6 rounded-3xl flex items-center justify-between hover:translate-x-2 transition-all cursor-pointer group relative"
           >
             <div className="flex items-center gap-6">
                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 ${tx.type === TransactionType.INCOME ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-700'}`}>
@@ -208,15 +294,54 @@ const Transactions = () => {
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{tx.category} • {tx.timestamp}</p>
                </div>
             </div>
-            <div className="text-right">
-                    <p className="text-2xl font-manrope font-black truncate max-w-[200px] md:max-w-none">
-                       {tx.type === TransactionType.INCOME ? '+' : '-'} {formatMoney(visualConvert(tx.amount))}
-                    </p>
-                    <p className="text-[10px] font-bold text-gray-400">Original: {formatMoney(tx.amount, 'ARS')}</p>
+            
+            <div className="flex items-center gap-6">
+               <div className="text-right">
+                        <p className="text-2xl font-manrope font-black truncate max-w-[200px] md:max-w-none">
+                           {tx.type === TransactionType.INCOME ? '+' : '-'}{formatMoney(tx.amount, tx.currency)}
+                        </p>
+                        {tx.currency !== displayCurrency && (
+                          <p className="text-[10px] font-bold text-gray-400">
+                             ≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}
+                          </p>
+                        )}
+               </div>
+               
+               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => handleEdit(tx, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-primary transition shadow-sm">
+                     <Pencil size={16} />
+                  </button>
+                  <button onClick={(e) => handleDelete(tx.id, e)} className="p-3 bg-gray-100 dark:bg-slate-700 rounded-xl hover:text-red-500 transition shadow-sm">
+                     <Trash2 size={16} />
+                  </button>
+               </div>
             </div>
           </div>
         ))}
+        {filteredTx.length === 0 && <div className="p-12 text-center text-gray-400">No se encontraron transacciones.</div>}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 py-8">
+           <button 
+             disabled={currentPage === 1} 
+             onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0,0); }}
+             className="p-3 bg-white dark:bg-slate-800 rounded-2xl disabled:opacity-30 shadow-sm transition hover:scale-110"
+           >
+              <ChevronLeft />
+           </button>
+           <span className="font-manrope font-black text-sm uppercase tracking-widest">
+              Página {currentPage} de {totalPages}
+           </span>
+           <button 
+             disabled={currentPage === totalPages} 
+             onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0,0); }}
+             className="p-3 bg-white dark:bg-slate-800 rounded-2xl disabled:opacity-30 shadow-sm transition hover:scale-110"
+           >
+              <ChevronRight />
+           </button>
+        </div>
+      )}
 
       {selectedTx && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedTx(null)}>
@@ -226,7 +351,11 @@ const Transactions = () => {
                      {selectedTx.type === 'INCOME' ? <ArrowUpRight size={40} /> : <ArrowDownRight size={40}/>}
                   </div>
                   <h2 className="text-4xl font-manrope font-black mb-2">{formatMoney(selectedTx.amount, selectedTx.currency)}</h2>
-                  <p className="text-primary font-bold tracking-widest uppercase text-xs">≈ {formatMoney(convert(selectedTx.amount, selectedTx.currency))}</p>
+                  {selectedTx.currency !== displayCurrency && (
+                    <p className="text-primary font-bold tracking-widest uppercase text-xs">
+                       ≈ {formatMoney(visualConvert(convert(selectedTx.amount, selectedTx.currency)), displayCurrency)}
+                    </p>
+                  )}
                </div>
                
                <div className="space-y-4 surface-card p-6 rounded-3xl mb-8">

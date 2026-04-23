@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { WalletCards, Plus, CreditCard, Send, X, Eye, EyeOff, HelpCircle } from 'lucide-react';
+import { WalletCards, Plus, CreditCard, Send, X, Eye, EyeOff, HelpCircle, Trash2, Pencil } from 'lucide-react';
 import HelpModal from '../components/HelpModal';
 import { Currency } from '@finan/shared';
 
 const Accounts = () => {
-  const { t, baseCurrency, playUiSound } = useAppContext();
+  const { t, baseCurrency, playUiSound, displayCurrency, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
@@ -13,6 +13,7 @@ const Accounts = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [formError, setFormError] = useState<string|null>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
   const [accountTxs, setAccountTxs] = useState<any[]>([]);
   
   // Forms
@@ -45,19 +46,47 @@ const Accounts = () => {
     let nBal = parseFloat(newAcc.balance);
     if(isNaN(nBal)) nBal = 0;
     try {
-      const res = await fetch('/api/accounts', {
-        method: 'POST',
+      const url = editingAccount ? `/api/accounts/${editingAccount.id}` : '/api/accounts';
+      const method = editingAccount ? 'PATCH' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ name: newAcc.name, currency: newAcc.currency, balance: nBal })
       });
       if (!res.ok) throw new Error('Error saving');
       setShowAddForm(false);
+      setEditingAccount(null);
       setNewAcc({ name: '', currency: baseCurrency, balance: '' });
       playUiSound('success');
       fetchAccounts();
     } catch(err) {
       setFormError(t('invalidData') || 'Error');
     }
+  };
+
+  const handleDeleteAccount = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('¿Eliminar esta cuenta? Se validará que no tenga transacciones.')) return;
+    try {
+      const res = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+      playUiSound('click');
+      fetchAccounts();
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const handleEditAccount = (acc: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingAccount(acc);
+    setNewAcc({ name: acc.name, currency: acc.currency, balance: acc.balance.toString() });
+    setShowAddForm(true);
+    playUiSound('click');
   };
 
   const handleTransfer = async (e: React.FormEvent) => {
@@ -152,10 +181,10 @@ const Accounts = () => {
       {showAddForm && (
         <div className="absolute inset-0 z-50 flex items-start justify-center pt-20 bg-black/40 backdrop-blur-sm animate-in fade-in">
            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 animate-in slide-in-from-top-10">
-              <div className="flex justify-between items-center mb-6">
-                 <h3 className="text-xl font-bold dark:text-white">Nueva Cuenta</h3>
-                 <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-red-500"><X/></button>
-              </div>
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold dark:text-white">{editingAccount ? 'Editar' : 'Nueva'} Cuenta</h3>
+                  <button onClick={() => { setShowAddForm(false); setEditingAccount(null); }} className="text-gray-400 hover:text-red-500"><X/></button>
+               </div>
               {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
               <form onSubmit={handleAddAccount} className="space-y-4">
                  <div>
@@ -172,7 +201,9 @@ const Accounts = () => {
                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Balance Inicial</label>
                     <input type="number" step="0.01" value={newAcc.balance} onChange={e=>setNewAcc({...newAcc, balance: e.target.value})} className="w-full bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 border rounded-lg px-3 py-2 text-sm dark:text-white"/>
                  </div>
-                 <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg shadow hover:bg-blue-600 transition">Agregar Cuenta</button>
+                  <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg shadow hover:bg-blue-600 transition">
+                    {editingAccount ? 'Actualizar' : 'Agregar'} Cuenta
+                  </button>
               </form>
            </div>
         </div>
@@ -224,17 +255,26 @@ const Accounts = () => {
                    <div className="bg-white/20 p-2 rounded-lg backdrop-blur">
                      <CreditCard size={24} className="opacity-80" />
                    </div>
-                   <div className="w-12 h-8 bg-gray-300/30 rounded flex items-center justify-center backdrop-blur">
-                      <div className="w-8 h-5 border border-gray-400 rounded-sm grid grid-cols-3 grid-rows-2">
-                        <div className="border-r border-b border-gray-400"></div><div className="border-b border-gray-400"></div><div className="border-l border-b border-gray-400"></div>
-                        <div className="border-r border-gray-400"></div><div></div><div className="border-l border-gray-400"></div>
-                      </div>
-                   </div>
-                </div>
+                    <div className="flex gap-2">
+                       <button onClick={(e) => handleEditAccount(acc, e)} className="p-2 bg-white/20 rounded-lg hover:bg-white/40 transition">
+                          <Pencil size={18} />
+                       </button>
+                       <button onClick={(e) => handleDeleteAccount(acc.id, e)} className="p-2 bg-white/20 rounded-lg hover:bg-red-500 transition">
+                          <Trash2 size={18} />
+                       </button>
+                    </div>
+                 </div>
 
                 <div>
                   <p className="text-gray-400 text-xs font-semibold tracking-widest uppercase mb-1">{acc.name}</p>
-                  <h3 className="text-2xl font-bold tracking-tight">{acc.currency} {showBalances ? acc.balance.toLocaleString() : '****'}</h3>
+                  <h3 className="text-2xl font-bold tracking-tight">
+                    {showBalances ? formatMoney(acc.balance, acc.currency) : '****'}
+                  </h3>
+                  {showBalances && acc.currency !== displayCurrency && (
+                    <p className="text-xs text-gray-400 opacity-80 mt-1">
+                      ≈ {formatMoney(visualConvert(convert(acc.balance, acc.currency)), displayCurrency)}
+                    </p>
+                  )}
                 </div>
              </div>
            ))}
@@ -248,7 +288,10 @@ const Accounts = () => {
               <div className="flex justify-between items-start mb-6">
                  <div>
                    <h2 className="text-2xl font-bold dark:text-white">{selectedAccount.name}</h2>
-                   <p className="text-gray-500 dark:text-gray-400">Balance Actual: <span className="font-bold text-gray-800 dark:text-white">{selectedAccount.currency} {showBalances ? selectedAccount.balance.toLocaleString() : '****'}</span></p>
+                   <p className="text-gray-500 dark:text-gray-400">Balance Actual: <span className="font-bold text-gray-800 dark:text-white">{showBalances ? formatMoney(selectedAccount.balance, selectedAccount.currency) : '****'}</span></p>
+                    {showBalances && selectedAccount.currency !== displayCurrency && (
+                       <p className="text-xs text-gray-400">≈ {formatMoney(visualConvert(convert(selectedAccount.balance, selectedAccount.currency)), displayCurrency)}</p>
+                    )}
                  </div>
                  <button onClick={() => setSelectedAccount(null)} className="text-gray-400 hover:text-red-500"><X/></button>
               </div>
@@ -267,8 +310,11 @@ const Accounts = () => {
                                <p className="text-sm font-bold dark:text-white">{tx.description}</p>
                                <p className="text-xs text-gray-500">{tx.timestamp} • {tx.type === 'TRANSFER' ? 'Transferencia' : tx.category}</p>
                             </div>
-                            <div className={`font-bold ${isIncoming ? 'text-green-500' : 'text-gray-800 dark:text-white'}`}>
-                               {isIncoming ? '+' : '-'}{tx.amount} <span className="text-xs font-normal">{tx.currency}</span>
+                            <div className={`text-right ${isIncoming ? 'text-green-500' : 'text-gray-800 dark:text-white'}`}>
+                               <p className="font-bold">{isIncoming ? '+' : '-'}{formatMoney(tx.amount, tx.currency)}</p>
+                               {tx.currency !== displayCurrency && (
+                                 <p className="text-[10px] font-normal text-gray-400">≈ {formatMoney(visualConvert(convert(tx.amount, tx.currency)), displayCurrency)}</p>
+                               )}
                             </div>
                          </div>
                        )
