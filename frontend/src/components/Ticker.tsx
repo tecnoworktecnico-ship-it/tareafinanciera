@@ -38,11 +38,11 @@ const Ticker = () => {
         COTIZACIONES (1 UNIDAD = X ARS):
       </div>
       <div className="flex animate-marquee min-w-full">
-        {Object.entries(rates).map(([curr, rate]) => {
+        {Object.entries(rates).filter(([curr]) => curr !== 'ARS').map(([curr, rate]) => {
           const prev = lastRates[curr] || rate;
           const isUp = rate > prev;
           const isDown = rate < prev;
-          const isBase = curr === 'ARS';
+          const isBase = false; // Filtered out ARS above
 
           return (
             <div key={curr} className={`inline-flex items-center mx-4 gap-1 ${isBase ? 'opacity-50' : ''}`}>

@@ -7,6 +7,13 @@ import HelpModal from '../components/HelpModal';
 const Dashboard = () => {
   const { t, baseCurrency, displayCurrency, playUiSound, convert, visualConvert, formatMoney, loadingRates } = useAppContext();
   const [transactions, setTransactions] = useState<any[]>([]);
+  
+  const currencyNames: Record<string, string> = {
+    ARS: 'Pesos Argentinos',
+    USD: 'Dólar Estadounidense',
+    EUR: 'Euro',
+    PEN: 'Sol Peruano'
+  };
   const [loading, setLoading] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -79,7 +86,7 @@ const Dashboard = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
            <div className="space-y-4">
               <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                 <Sparkles size={16} /> {t('totalBalance')} ({baseCurrency})
+                 <Sparkles size={16} /> {t('totalBalance')} ({displayCurrency})
               </h3>
               <div className="flex items-start gap-4">
                  <h1 className="text-hero text-[#191c1d] dark:text-white">
@@ -135,7 +142,7 @@ const Dashboard = () => {
                   </div>
                   <div className="text-right">
                      <p className={`text-xl font-manrope font-black ${tx.type === TransactionType.INCOME ? 'text-green-600' : 'text-[#191c1d] dark:text-white'}`}>
-                        {tx.type === TransactionType.INCOME ? '+' : '-'} {formatMoney(tx.amount, tx.currency)}
+                        {tx.type === TransactionType.INCOME ? '+' : '-'} {formatMoney(visualConvert(convert(tx.amount, tx.currency)))}
                      </p>
                      <p className="text-[10px] font-bold text-gray-400">≈ {formatMoney(convert(tx.amount, tx.currency))}</p>
                   </div>
@@ -149,7 +156,7 @@ const Dashboard = () => {
            <div className="glass-premium p-8 rounded-[2rem] space-y-6 relative overflow-hidden">
               <div className="relative z-10">
                  <h3 className="font-bold flex items-center gap-2 mb-4"><TrendingUp size={18} className="text-primary"/> Salud Mensual</h3>
-                 <p className="text-xs text-gray-500 mb-6 font-manrope">Visualización activa en **{displayCurrency}**. Respaldo contable en ARS.</p>
+                 <p className="text-xs text-gray-500 mb-6 font-manrope">Visualización activa en {displayCurrency}. Respaldo contable en ARS.</p>
                  <div className="w-full h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full w-[100%]"></div>
                  </div>
@@ -159,8 +166,8 @@ const Dashboard = () => {
            <div className="glass p-6 rounded-[2rem] flex items-center gap-4">
               <div className="p-3 bg-primary text-white rounded-2xl"><Wallet /></div>
               <div>
-                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Base de Datos</p>
-                 <p className="font-bold">ARS - Pesos Argentinos</p>
+                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">DIVISA ACTIVA</p>
+                 <p className="font-bold">{displayCurrency} - {currencyNames[displayCurrency] || displayCurrency}</p>
               </div>
            </div>
         </div>

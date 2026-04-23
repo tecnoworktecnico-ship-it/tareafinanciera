@@ -108,7 +108,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (target === Currency.ARS) return amountARS;
     
     // If USD price is 1050, then ARS -> USD is amount / 1050
-    const rate = rates[target] || 1;
+    if (!rates[target] || loadingRates) return amountARS; // aún cargando
+    const rate = rates[target];
     return amountARS / rate;
   }, [rates, displayCurrency]);
 
