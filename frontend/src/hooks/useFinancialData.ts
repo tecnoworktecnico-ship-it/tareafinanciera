@@ -4,9 +4,21 @@ export const useFinancialData = () => {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [categories, setCategories] = useState<string[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loadingRates, setLoadingRates] = useState(true);
 
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounts');
+      const data = await res.json();
+      if (Array.isArray(data)) setAccounts(data);
+    } catch (e) {
+      console.error('Error fetching accounts:', e);
+    }
+  }, []);
+
   const fetchRates = useCallback(async () => {
+
     setLoadingRates(true);
     try {
       const res = await fetch(`/api/exchange-rates`);
@@ -60,6 +72,7 @@ export const useFinancialData = () => {
     fetchRates();
     fetchCategories();
     fetchTransactions();
+    fetchAccounts();
     const interval = setInterval(fetchRates, 60000);
     return () => clearInterval(interval);
   }, [fetchRates, fetchCategories, fetchTransactions]);
@@ -68,9 +81,11 @@ export const useFinancialData = () => {
     rates,
     categories,
     transactions,
+    accounts,
     loadingRates,
     fetchTransactions,
     fetchCategories,
+    fetchAccounts,
     addCategory
   };
 };

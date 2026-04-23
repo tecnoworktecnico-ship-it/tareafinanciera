@@ -7,8 +7,7 @@ import AccountDetailModal from '../components/AccountDetailModal';
 import TransferForm from '../components/TransferForm';
 
 const Accounts = () => {
-  const { t, playUiSound, displayCurrency, convert, visualConvert, formatMoney, transactions } = useAppContext();
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const { t, playUiSound, displayCurrency, convert, visualConvert, formatMoney, transactions, accounts, fetchAccounts } = useAppContext();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
@@ -16,13 +15,6 @@ const Accounts = () => {
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [editingAccount, setEditingAccount] = useState<any>(null);
   
-  const fetchAccounts = () => {
-    fetch('/api/accounts')
-      .then(res => res.json())
-      .then(data => setAccounts(data))
-      .catch(console.error);
-  };
-
   useEffect(() => {
     fetchAccounts();
   }, []);

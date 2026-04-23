@@ -24,7 +24,9 @@ interface AppContextType {
   formatMoney: (amount: number, currency?: string) => string;
   loadingRates: boolean;
   transactions: any[];
+  accounts: any[];
   fetchTransactions: () => Promise<void>;
+  fetchAccounts: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -45,8 +47,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const { playUiSound } = useSound(soundEnabled);
   const { 
-    rates, categories, transactions, loadingRates, 
-    fetchTransactions, addCategory 
+    rates, categories, transactions, accounts, loadingRates, 
+    fetchTransactions, fetchCategories, fetchAccounts, addCategory 
   } = useFinancialData();
 
   useEffect(() => { localStorage.setItem('displayCurrency', displayCurrency); }, [displayCurrency]);
@@ -90,7 +92,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       displayCurrency, setDisplayCurrency,
       theme, setTheme, soundEnabled, setSoundEnabled, t, playUiSound,
       rates, categories, addCategory, convert, visualConvert, formatMoney, loadingRates,
-      transactions, fetchTransactions
+      transactions, fetchTransactions, accounts, fetchAccounts
     }}>
       {children}
     </AppContext.Provider>
